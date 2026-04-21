@@ -4,8 +4,8 @@ export function Header() {
       <div className="mark">dibbeshwor<span className="dot">.</span></div>
       <nav className="nav">
         <a href="mailto:dibbeshwor@gmail.com">email</a>
-        <a href="https://linkedin.com/in/dbeee" target="_blank" rel="noopener">linkedin</a>
-        <a href="https://dbeee-acharya.github.io/LandingPage" target="_blank" rel="noopener">resume</a>
+        <a href="https://github.com/dibbeshwor" target="_blank" rel="noopener">github</a>
+        <a href="https://www.linkedin.com/in/dbeee/" target="_blank" rel="noopener">linkedin</a>
       </nav>
     </header>
   )

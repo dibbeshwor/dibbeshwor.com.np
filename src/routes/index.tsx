@@ -83,7 +83,7 @@ function Home() {
           </p>
           <p>
             Lately I've been shipping at{" "}
-            <a href="https://kantipurtv.com" target="_blank" rel="noopener">
+            <a href="https://kmg.com.np" target="_blank" rel="noopener">
               Kantipur Media Group
             </a>{" "}
             and{" "}
