@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #F5F3EE; /* page background */
+  --color-surface: #E8EAF0;   /* cards / sections */
+  --color-muted: #B8C4D8;     /* muted text / borders */
+  --color-accent: #3D5A80;    /* buttons / links / tags */
+  --color-ink: #1B2D45;       /* headings / nav / dark bg */
+}
+
 *,
 *::before,
 *::after {
