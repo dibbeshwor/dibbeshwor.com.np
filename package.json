@@ -8,8 +8,8 @@
     "build": "vite build",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist"
+    "preview": "pnpm run build && wrangler dev",
+    "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.168.23",
