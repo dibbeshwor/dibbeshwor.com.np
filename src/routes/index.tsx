@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
+import { MoreLinks } from "../components/MoreLinks";
 import { NeovimEditor } from "../components/NeovimEditor";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -99,6 +100,8 @@ function Home() {
             hi.
           </p>
         </section>
+
+        <MoreLinks />
 
         <NeovimEditor />
       </main>
