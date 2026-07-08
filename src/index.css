@@ -210,6 +210,116 @@ body::before {
   border-bottom-color: var(--accent);
 }
 
+/* ————— work list ————— */
+.work-list {
+  margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+.work-item {
+  border-left: 2px dashed rgba(61,90,128,0.3);
+  padding-left: 22px;
+}
+.work-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  margin: 0;
+  color: var(--ink);
+}
+.work-title a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(61,90,128,0.45);
+  transition: all .2s;
+}
+.work-title a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.work-meta {
+  font-family: var(--font-accent);
+  font-size: 20px;
+  color: var(--accent);
+  margin: 2px 0 8px;
+}
+.work-desc {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink);
+  opacity: 0.85;
+  max-width: 58ch;
+  margin: 0 0 10px;
+  text-wrap: pretty;
+}
+.work-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.work-tags .tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 10px;
+  background: var(--surface);
+  border: 1px solid var(--muted);
+  border-radius: 999px;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+/* ————— blog post ————— */
+.post {
+  margin-top: 48px;
+  max-width: 58ch;
+}
+.post-meta {
+  font-family: var(--font-accent);
+  font-size: 20px;
+  color: var(--accent);
+  transform: rotate(-1deg);
+  display: inline-block;
+  margin: 0 0 2px;
+}
+.post-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+.post-body {
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.post-body p { margin: 0 0 16px; }
+.post-body code {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  background: var(--surface);
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.post-outro {
+  margin-top: 40px;
+  font-family: var(--font-accent);
+  font-size: 22px;
+  color: var(--accent);
+  transform: rotate(-1deg);
+  display: inline-block;
+}
+.post-outro a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(61,90,128,0.5);
+}
+.post-outro a:hover { border-bottom-style: solid; }
+
 /* ————— decorations ————— */
 .deco {
   position: absolute;
@@ -263,6 +373,20 @@ body::before {
   transform: rotate(-0.3deg);
 }
 .term:focus { outline: none; }
+/* hidden textarea that actually receives keystrokes (works on mobile too) */
+.term-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  resize: none;
+  overflow: hidden;
+  /* 16px+ stops iOS from zooming in when it gains focus */
+  font-size: 16px;
+}
+.term { position: relative; }
 .term-chrome {
   display: flex;
   align-items: center;
@@ -353,6 +477,36 @@ body::before {
   border-top: 1px solid rgba(184,196,216,0.06);
 }
 .term-cmd .prompt { color: var(--muted); }
+/* touch-key bar — only shown on devices without a physical keyboard */
+.term-touchbar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.25);
+  border-top: 1px solid rgba(184,196,216,0.08);
+}
+@media (pointer: coarse) {
+  .term-touchbar { display: flex; }
+}
+.tkey {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 4px 14px;
+  background: rgba(184,196,216,0.12);
+  color: #E8EAF0;
+  border: 1px solid rgba(184,196,216,0.25);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tkey:active { background: rgba(184,196,216,0.3); }
+.tkey-hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(184,196,216,0.45);
+}
 
 /* ————— footer ————— */
 .footer {
@@ -452,7 +606,7 @@ body::before {
   .page { padding: 40px 22px 80px; }
   .topbar { margin-bottom: 56px; }
   .deco { display: none; }
-  .term-body { min-height: 280px; }
-  .term-section { display: none; }
+  .term { font-size: 13px; transform: none; }
+  .term-body { min-height: 240px; max-height: 320px; }
   .more { margin-top: 28px; }
 }

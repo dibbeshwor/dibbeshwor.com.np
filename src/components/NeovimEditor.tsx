@@ -101,7 +101,8 @@ function execCmd(s: S, raw: string): S {
       '" about dibbeshwor',
       "",
       "full-stack & AI engineer based in nepal.",
-      "shipping at kantipur media and uptrendly.",
+      "building AI infra for content @ mediastack ai.",
+      "previously at kantipur media and uptrendly.",
       "typescript, react, hono, postgres, ffmpeg, a lot of LLMs.",
       "",
       "I like quiet tools that do loud work.",
@@ -113,7 +114,7 @@ function execCmd(s: S, raw: string): S {
     const lines = [
       '" get in touch',
       "",
-      "email     dibbeshwor@gmail.com",
+      "email     hi@dibbeshwor.com.np",
       "phone     +977 9709061216",
       "linkedin  linkedin.com/in/dbeee",
       "",
@@ -322,9 +323,28 @@ function reduce(s: S, key: string): S {
   return s;
 }
 
+// keys handled via keydown; anything else (mobile virtual keyboards often
+// report "Unidentified") falls through to the hidden textarea's input events
+const NAMED_KEYS = new Set([
+  "Escape",
+  "Enter",
+  "Backspace",
+  "Tab",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+  "Home",
+  "End",
+]);
+
+// zero-width space kept in the hidden textarea so backspace on virtual
+// keyboards always has something to delete (and thus fires an input event)
+const SENTINEL = "\u200b";
+
 export function NeovimEditor() {
   const [s, dispatch] = useReducer(reduce, INIT);
-  const termRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const bufRef = useRef<HTMLDivElement>(null);
 
   // scroll current line into view after every state change
@@ -340,30 +360,50 @@ export function NeovimEditor() {
       buf.scrollTop = top + cur.offsetHeight - view + 8;
   });
 
-  // auto-focus when scrolled into view (once)
-  useEffect(() => {
-    const el = termRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const en of entries) {
-          if (en.isIntersecting) {
-            el.focus({ preventScroll: true });
-            io.disconnect();
-          }
-        }
-      },
-      { threshold: 0.5 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    e.preventDefault();
-    dispatch(e.key);
+    // in NORMAL mode let Tab move focus so keyboard users aren't trapped
+    if (e.key === "Tab" && s.mode === "NORMAL") return;
+    if (e.key.length === 1 || NAMED_KEYS.has(e.key)) {
+      e.preventDefault();
+      dispatch(e.key);
+    }
   };
+
+  // mobile virtual keyboards don't produce reliable keydown events — read
+  // whatever landed in the hidden textarea, dispatch it, and reset
+  const flushInput = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    const v = el.value;
+    el.value = SENTINEL;
+    el.setSelectionRange(SENTINEL.length, SENTINEL.length);
+    if (!v.startsWith(SENTINEL)) dispatch("Backspace");
+    const typed = v.startsWith(SENTINEL) ? v.slice(SENTINEL.length) : v;
+    for (const ch of typed) dispatch(ch === "\n" ? "Enter" : ch);
+  };
+
+  const onInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    if ((e.nativeEvent as InputEvent).isComposing) return;
+    flushInput();
+  };
+
+  const focusInput = () => inputRef.current?.focus();
+
+  const touchKey = (key: string) => (
+    <button
+      type="button"
+      className="tkey"
+      // keep the hidden textarea focused (and the keyboard up) while tapping
+      onPointerDown={(e) => e.preventDefault()}
+      onClick={() => {
+        dispatch(key === "esc" ? "Escape" : key);
+        focusInput();
+      }}
+    >
+      {key}
+    </button>
+  );
 
   // gutter
   const total = Math.max(s.lines.length, 18);
@@ -441,14 +481,20 @@ export function NeovimEditor() {
   return (
     <section className="term-section" id="terminal">
       <div className="term-label">leave a note ↓</div>
-      <div
-        className="term"
-        tabIndex={0}
-        ref={termRef}
-        onKeyDown={onKeyDown}
-        onClick={() => termRef.current?.focus()}
-        aria-label="Neovim-style editor"
-      >
+      <div className="term" onClick={focusInput}>
+        <textarea
+          ref={inputRef}
+          className="term-input"
+          defaultValue={SENTINEL}
+          onKeyDown={onKeyDown}
+          onInput={onInput}
+          onCompositionEnd={flushInput}
+          autoCapitalize="off"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          aria-label="Neovim-style guestbook editor"
+        />
         <div className="term-chrome">
           <div className="dots">
             <span className="dot" />
@@ -476,6 +522,12 @@ export function NeovimEditor() {
           <span className="right">
             utf-8 · {s.row + 1}:{s.col + 1}
           </span>
+        </div>
+        <div className="term-touchbar" aria-label="editor keys for touch screens">
+          {touchKey("esc")}
+          {touchKey("i")}
+          {touchKey(":")}
+          <span className="tkey-hint">no keyboard? tap these</span>
         </div>
       </div>
     </section>

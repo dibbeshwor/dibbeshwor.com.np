@@ -1,7 +1,12 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
-export const Route = createFileRoute('/$')({ component: NotFound })
+export const Route = createFileRoute('/$')({
+  component: NotFound,
+  head: () => ({
+    meta: [{ title: '404 — Dibbeshwor Acharya' }],
+  }),
+})
 
 function NotFound() {
   const navigate = useNavigate()

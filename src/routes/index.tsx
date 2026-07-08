@@ -78,12 +78,17 @@ function Home() {
           <p>
             I spend my days glueing{" "}
             <span className="underline">LLMs, voice APIs, and ffmpeg</span> into
-            pipelines that turn one writer's news story into a video, a
-            voiceover, a WhatsApp push, and a Facebook post — all before the
-            second coffee.
+            pipelines that turn one writer's story into a video, a voiceover,
+            a WhatsApp push, and a Facebook post — all before the second
+            coffee.
           </p>
           <p>
-            Lately I've been shipping at{" "}
+            These days I'm an AI Engineer at{" "}
+            <a href="https://mediastack.pro" target="_blank" rel="noopener">
+              Mediastack AI
+            </a>
+            , building the AI-powered infrastructure behind how content gets
+            made. Before that I shipped at{" "}
             <a href="https://kmg.com.np" target="_blank" rel="noopener">
               Kantipur Media Group
             </a>{" "}
