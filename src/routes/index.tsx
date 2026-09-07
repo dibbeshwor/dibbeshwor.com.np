@@ -3,6 +3,7 @@ import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { MoreLinks } from "../components/MoreLinks";
 import { NeovimEditor } from "../components/NeovimEditor";
+import { TtsPlayground } from "../components/TtsPlayground";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -105,6 +106,8 @@ function Home() {
             hi.
           </p>
         </section>
+
+        <TtsPlayground />
 
         <MoreLinks />
 
