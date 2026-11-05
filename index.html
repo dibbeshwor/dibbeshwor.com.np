@@ -1,62 +1,73 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#06070b" />
+    <meta name="color-scheme" content="dark" />
 
-        <!-- title is route-managed; see src/routes/__root.tsx -->
-        <meta
-            name="description"
-            content=" Building pipelines, automations, and web apps with TypeScript, React, Hono, and a lot of LLMs."
-        />
-        <meta name="author" content="Dibbeshwor Acharya" />
+    <!-- title is route-managed; see src/routes/__root.tsx -->
+    <meta
+      name="description"
+      content="AI engineer in Kathmandu. Speech, agents and media pipelines that keep working in production."
+    />
+    <meta name="author" content="Dibbeshwor Acharya" />
+    <link rel="canonical" href="https://dibbeshwor.com.np/" />
 
-        <!-- Open Graph -->
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://dibbeshwor.com.np/" />
-        <meta
-            property="og:title"
-            content="Dibbeshwor Acharya — Full-Stack & AI Engineer"
-        />
-        <meta
-            property="og:description"
-            content=" Building pipelines, automations, and web apps with TypeScript, React, Hono, and a lot of LLMs."
-        />
-        <meta
-            property="og:image"
-            content="https://dibbeshwor.com.np/og_image.png"
-        />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dibbeshwor.com.np/" />
+    <meta property="og:site_name" content="Dibbeshwor Acharya" />
+    <meta property="og:title" content="Dibbeshwor Acharya — AI engineer" />
+    <meta
+      property="og:description"
+      content="I build AI systems that keep working when nobody's watching. Speech, agents and media pipelines, from the model to the people who rely on it."
+    />
+    <meta property="og:image" content="https://dibbeshwor.com.np/og_image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dibbeshwor Acharya — AI engineer, Kathmandu" />
 
-        <!-- Twitter / X -->
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://dibbeshwor.com.np/" />
-        <meta
-            name="twitter:title"
-            content="Dibbeshwor Acharya — Full-Stack & AI Engineer"
-        />
-        <meta
-            name="twitter:description"
-            content="Building pipelines, automations, and web apps with TypeScript, React, Hono, and a lot of LLMs."
-        />
-        <meta
-            name="twitter:image"
-            content="https://dibbeshwor.com.np/og_image.png"
-        />
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dibbeshwor Acharya — AI engineer" />
+    <meta
+      name="twitter:description"
+      content="I build AI systems that keep working when nobody's watching. Speech, agents and media pipelines, from the model to the people who rely on it."
+    />
+    <meta name="twitter:image" content="https://dibbeshwor.com.np/og_image.png" />
 
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;500;700&family=Nunito:wght@400;600;700;800&display=swap"
-            rel="stylesheet"
-        />
-    </head>
-    <body>
-        <div id="root"></div>
-        <script type="module" src="/src/main.tsx"></script>
-    </body>
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=Instrument+Serif:ital@1&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Dibbeshwor Acharya",
+        "jobTitle": "AI Engineering Lead",
+        "worksFor": { "@type": "Organization", "name": "M&S AI Labs", "url": "https://mns.com.np/mnslabs/" },
+        "url": "https://dibbeshwor.com.np",
+        "email": "mailto:hi@dibbeshwor.com.np",
+        "address": { "@type": "PostalAddress", "addressLocality": "Kathmandu", "addressCountry": "NP" },
+        "sameAs": ["https://www.linkedin.com/in/dbeee/", "https://github.com/dibbeshwor"]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

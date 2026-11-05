@@ -1,9 +1,10 @@
 import { createRootRoute, HeadContent, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { site } from '../content'
 
 export const Route = createRootRoute({
   head: () => ({
-    meta: [{ title: 'Dibbeshwor Acharya — Full-Stack & AI Engineer' }],
+    meta: [{ title: site.title }],
   }),
   component: () => (
     <>
