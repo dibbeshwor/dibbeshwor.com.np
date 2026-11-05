@@ -14,6 +14,7 @@ Built with React 19, TanStack Router, Tailwind CSS v4 and Vite, deployed to Clou
 | `src/lib/field.ts` | The particle engine: five formations, scroll-driven blending, pointer repulsion. |
 | `src/components/Chapters.tsx` | The pinned section. Maps scroll position to a formation and to chapter text. |
 | `src/components/*` | One component per section: `Nav`, `Hero`, `Work`, `About`, `Experience`, `Contact`. |
+| `src/components/Viz.tsx` | The small animated illustration on each project card (SVG + CSS keyframes in `index.css`). |
 | `src/index.css` | Tokens and page styles. Reduced-motion rules at the bottom. |
 | `public/` | Favicons, OG image, manifest, sitemap. |
 

@@ -5,7 +5,6 @@ export function Contact() {
   return (
     <section className="block contact" id="contact" aria-labelledby="contact-title">
       <div className="wrap">
-        <p className="eyebrow reveal"><span className="n">■</span> Contact</p>
         <h2 id="contact-title" className="reveal" style={{ '--i': 1 } as React.CSSProperties}>Let’s <em className="s">talk.</em></h2>
         <p className="lede reveal" style={{ '--i': 2 } as React.CSSProperties}>{contact.lede}</p>
         <div className="actions reveal" style={{ '--i': 3 } as React.CSSProperties}>

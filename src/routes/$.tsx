@@ -15,7 +15,7 @@ function NotFound() {
       <Field />
       <main className="nf">
         <div className="wrap">
-          <p className="eyebrow"><span className="n">404</span> Nothing here</p>
+          <p className="hello">404</p>
           <h1>This page drifted <em className="s">out of orbit.</em></h1>
           <p className="lede">The address may have changed, or it never existed. The homepage has everything.</p>
           <div className="actions">

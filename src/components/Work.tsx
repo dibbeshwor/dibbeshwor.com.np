@@ -1,31 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { smaller, work, type Figure } from '../content'
+import { smaller, work } from '../content'
 import { useFinePointer } from '../hooks/useReducedMotion'
-
-function FigureView({ figure }: { figure: Figure }) {
-  if (figure.kind === 'pipe') {
-    return (
-      <div className="pipe">
-        {figure.steps.map((s, i) => (
-          <span key={s} style={{ display: 'contents' }}>
-            {i > 0 && <i aria-hidden="true">→</i>}
-            <span className={s === figure.hot ? 'hot' : undefined}>{s}</span>
-          </span>
-        ))}
-      </div>
-    )
-  }
-  return (
-    <>
-      {figure.items.map((m) => (
-        <div className="metric" key={m.label}>
-          <b>{m.value}{m.unit && <small>{m.unit}</small>}</b>
-          <span>{m.label}</span>
-        </div>
-      ))}
-    </>
-  )
-}
+import { Viz } from './Viz'
 
 /** Cards light up around the pointer. Only on fine pointers; touch gets the static card. */
 function useSpotlight(ref: React.RefObject<HTMLElement | null>) {
@@ -34,7 +10,7 @@ function useSpotlight(ref: React.RefObject<HTMLElement | null>) {
     const root = ref.current
     if (!root || !fine) return
     const cards = Array.from(root.querySelectorAll<HTMLElement>('.card'))
-    const handlers = cards.map((card) => {
+    const offs = cards.map((card) => {
       const h = (e: PointerEvent) => {
         const r = card.getBoundingClientRect()
         card.style.setProperty('--mx', `${e.clientX - r.left}px`)
@@ -43,7 +19,7 @@ function useSpotlight(ref: React.RefObject<HTMLElement | null>) {
       card.addEventListener('pointermove', h)
       return () => card.removeEventListener('pointermove', h)
     })
-    return () => handlers.forEach((off) => off())
+    return () => offs.forEach((off) => off())
   }, [ref, fine])
 }
 
@@ -54,27 +30,30 @@ export function Work() {
     <section className="block" id="work" aria-labelledby="work-title">
       <div className="wrap">
         <div className="head reveal">
-          <div>
-            <p className="eyebrow"><span className="n">■</span> Selected work</p>
-            <h2 id="work-title">Things that run <em className="s">in production.</em></h2>
-          </div>
+          <h2 id="work-title">Things that run <em className="s">in production.</em></h2>
           <p className="aside">2024 → now</p>
         </div>
 
         <div className="grid" ref={grid}>
-          {work.map((w, i) => (
-            <article key={w.title} className={`card reveal ${w.wide ? 'wide' : ''}`} style={{ '--i': i } as React.CSSProperties}>
-              <div className="body">
-                <p className="k"><span>{w.kicker}</span><span>{w.meta}</span></p>
-                <h3>{w.title}</h3>
-                <p>{w.body}</p>
-                {w.stack && (
-                  <div className="stack">{w.stack.map((s) => <span key={s}>{s}</span>)}</div>
-                )}
-              </div>
-              <div className="figure"><FigureView figure={w.figure} /></div>
-            </article>
-          ))}
+          {work.map((w, i) => {
+            const inner = (
+              <>
+                <div className="viz-wrap"><Viz kind={w.viz} /></div>
+                <div className="body">
+                  <h3>{w.title}{w.href && <span className="arrow" aria-hidden="true">↗</span>}</h3>
+                  <p>{w.line}</p>
+                  <p className="meta">{w.meta}</p>
+                </div>
+              </>
+            )
+            const cls = `card reveal ${w.size}`
+            const style = { '--i': i } as React.CSSProperties
+            return w.href ? (
+              <a key={w.title} className={cls} style={style} href={w.href} target="_blank" rel="noopener">{inner}</a>
+            ) : (
+              <article key={w.title} className={cls} style={style}>{inner}</article>
+            )
+          })}
         </div>
 
         <div className="more reveal">

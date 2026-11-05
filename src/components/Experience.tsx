@@ -5,10 +5,7 @@ export function Experience() {
     <section className="block" id="experience" aria-labelledby="xp-title">
       <div className="wrap">
         <div className="head reveal">
-          <div>
-            <p className="eyebrow"><span className="n">■</span> Experience</p>
-            <h2 id="xp-title">Where I’ve <em className="s">been.</em></h2>
-          </div>
+          <h2 id="xp-title">Where I’ve <em className="s">been.</em></h2>
           <a className="aside" href={site.linkedin} target="_blank" rel="noopener">Full history on LinkedIn ↗</a>
         </div>
         <ul className="xp">

@@ -93,9 +93,8 @@ export function Chapters() {
             <span>0{chapters.length}</span>
           </div>
 
-          {chapters.map((c, i) => (
+          {chapters.map((c) => (
             <article className="chapter" key={c.kicker}>
-              <p className="eyebrow"><span className="n">0{i + 1}</span> {c.kicker}</p>
               <h2>{c.title} <em className="s">{c.accent}</em></h2>
               <p>{c.body}</p>
               <div className="fig">

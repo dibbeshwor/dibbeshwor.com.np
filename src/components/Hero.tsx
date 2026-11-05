@@ -16,9 +16,7 @@ export function Hero() {
   const afterWords = WORD_START + WORD_STEP * hero.words.length + 70
   return (
     <section className="hero wrap" aria-labelledby="hero-title">
-      <p className="eyebrow rise" style={at(0)}>
-        <span className="n">●</span> {hero.eyebrow}
-      </p>
+      <p className="hello rise" style={at(0)}>{hero.hello}</p>
       <h1 id="hero-title">
         {hero.words.map((w, i) => (
           <span key={w} className="w rise" style={at(WORD_START + WORD_STEP * i)}>{w}</span>

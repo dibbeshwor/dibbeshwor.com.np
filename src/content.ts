@@ -17,13 +17,13 @@ export const site = {
 }
 
 export const hero = {
-  eyebrow: 'AI engineer · Kathmandu · currently at M&S AI Labs',
+  hello: 'Dibbeshwor Acharya, AI engineer in Kathmandu.',
   // the last entry is set in the accent serif
   words: ['I build', 'AI systems', 'that keep', 'working when'],
   accent: "nobody's watching.",
   lede:
     'Speech, agents and media pipelines: the part between a model and the people who depend on it. Two years shipping to production, end to end.',
-  meta: ['TypeScript · Python', 'LLM agents · RAG · TTS', 'Postgres · Redis · GPUs', 'Remote-friendly'],
+  meta: ['Currently at M&S AI Labs', 'TypeScript · Python', 'LLM agents · RAG · TTS', 'Remote-friendly'],
 }
 
 export interface Chapter {
@@ -81,83 +81,76 @@ export const chapters: Chapter[] = [
   },
 ]
 
-export type Figure =
-  | { kind: 'metrics'; items: { value: string; unit?: string; label: string }[] }
-  | { kind: 'pipe'; steps: string[]; hot: string }
-
 export interface WorkItem {
-  kicker: string
-  meta: string
   title: string
-  body: string
-  stack?: string[]
-  figure: Figure
-  wide?: boolean
+  line: string
+  meta: string
+  href?: string
+  viz: 'astro' | 'shop' | 'cutaway' | 'tts' | 'election' | 'article' | 'atlas'
+  size: 'lead' | 'third' | 'half'
 }
 
 export const work: WorkItem[] = [
   {
-    kicker: 'Text-to-speech gateway',
-    meta: 'Kantipur · M&S AI Labs · 2025–now',
-    title: 'Nepali speech, at newsroom speed',
-    body:
-      'Fine-tuned TTS behind a queue-based gateway: a Hono API hands jobs to GPU Python workers, with job state in PostgreSQL, API keys, webhooks and retries with backoff.',
-    stack: ['TypeScript', 'Hono', 'Python', 'PostgreSQL', 'Docker', 'GPUs'],
-    figure: {
-      kind: 'metrics',
-      items: [
-        { value: '<10', unit: 'min', label: 'hour-long radio bulletin' },
-        { value: '120', unit: '+/day', label: 'articles given a voice' },
-      ],
-    },
-    wide: true,
+    title: 'AstroMates',
+    line: 'Friends answer one question a day and see how their Vedic charts line up. An AI Jyotishi answers in English or Nepali.',
+    meta: 'astromates.io',
+    href: 'https://astromates.io',
+    viz: 'astro',
+    size: 'lead',
   },
   {
-    kicker: 'Conversational news',
-    meta: '2026',
-    title: 'chat.ekantipur.com',
-    body:
-      'Readers ask the news questions. Frontend, Node.js proxy and an embeddable widget, covering the whole path from browser to model.',
-    figure: { kind: 'pipe', steps: ['reader', 'widget', 'proxy', 'model'], hot: 'model' },
+    title: 'Shopmate',
+    line: 'Groceries ordered on WhatsApp by text or voice note, across the Kathmandu valley. The nearest rider is assigned automatically.',
+    meta: 'shopmate.si',
+    href: 'https://shopmate.si',
+    viz: 'shop',
+    size: 'lead',
   },
   {
-    kicker: 'Real-time messaging',
-    meta: '2026',
+    title: 'Nepali speech at newsroom speed',
+    line: 'Fine-tuned text-to-speech behind a queue-based gateway. An hour of radio, voiced in under ten minutes.',
+    meta: 'Kantipur · M&S AI Labs',
+    viz: 'tts',
+    size: 'third',
+  },
+  {
+    title: 'Cutaway',
+    line: 'A long recording goes in; the moments worth keeping come out as short clips.',
+    meta: 'cutaway.pro',
+    href: 'https://cutaway.pro',
+    viz: 'cutaway',
+    size: 'third',
+  },
+  {
     title: 'Election night on WhatsApp',
-    body: 'Live result updates during Nepal’s 2026 election, pushed to a WhatsApp channel as counts came in.',
-    figure: { kind: 'metrics', items: [{ value: '~40', unit: 'k', label: 'subscribers receiving live results' }] },
+    line: 'Live results for Nepal’s 2026 election, pushed to a channel as the counts came in.',
+    meta: 'Kantipur · 2026',
+    viz: 'election',
+    size: 'third',
   },
   {
-    kicker: 'Media automation',
-    meta: '2024–26',
     title: 'Article → narrated video',
-    body:
-      'A story goes in; a narrated video comes out and is published to Facebook, Instagram and WhatsApp with no one in the loop.',
-    figure: { kind: 'pipe', steps: ['article', 'tts', 'ffmpeg', 'publish'], hot: 'ffmpeg' },
+    line: 'A story goes in; a narrated video comes out and publishes itself to three platforms.',
+    meta: 'Kantipur · 2024–26',
+    viz: 'article',
+    size: 'half',
   },
   {
-    kicker: 'Creator tooling',
-    meta: 'Uptrendly · 2025–26',
-    title: 'Brief → finished video',
-    body:
-      'Script, image, voice and video generation in one pipeline, plus a RAG agent that recommends influencers over WhatsApp.',
-    figure: { kind: 'metrics', items: [{ value: '<30', unit: 'min', label: 'from brief to finished video' }] },
-  },
-  {
-    kicker: 'Regional speech',
-    meta: 'M&S AI Labs · ongoing',
     title: 'Atlas',
-    body: 'Architecture for text-to-speech across regional languages: datasets, per-language quality benchmarks, deployment.',
-    figure: { kind: 'metrics', items: [{ value: '40', label: 'languages in scope' }] },
+    line: 'Speech for 40 regional languages: datasets, per-language quality benchmarks, deployment.',
+    meta: 'M&S AI Labs · ongoing',
+    viz: 'atlas',
+    size: 'half',
   },
 ]
 
 export const smaller: { title: string; body: string }[] = [
-  { title: 'Shopmate', body: 'Groceries ordered on WhatsApp by text or voice note. The nearest rider is assigned automatically.' },
-  { title: 'WhatsApp assistant', body: 'Prototype agent for email, spreadsheets and message triage. Mostly taught me where platform policy draws the line.' },
+  { title: 'Brief → finished video', body: 'Script, image, voice and video in one pipeline, under 30 minutes end to end. Uptrendly Media.' },
+  { title: 'Influencer RAG agent', body: 'Recommends creators from proprietary data, over WhatsApp. Uptrendly Media.' },
+  { title: 'WhatsApp assistant', body: 'Prototype agent for email, spreadsheets and triage. Mostly taught me where platform policy draws the line.' },
   { title: 'Likeness studio', body: 'Consent-based ad images and short videos for creators, with a royalty model.' },
   { title: 'Protest discourse', body: 'Analysis of 40,000+ Discord and Reddit posts from Nepal’s Gen-Z protests.' },
-  { title: 'Lokdohori Pratisthan', body: 'Membership platform with eSewa payments for a folk-music organisation.' },
   { title: 'Digital Palika', body: 'Municipal services with role-based access and a letter-template builder.' },
 ]
 
