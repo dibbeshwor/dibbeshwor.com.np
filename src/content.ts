@@ -86,7 +86,7 @@ export interface WorkItem {
   line: string
   meta: string
   href?: string
-  viz: 'astro' | 'shop' | 'cutaway' | 'tts' | 'election' | 'article' | 'atlas'
+  viz: 'astro' | 'shop' | 'cutaway' | 'scout' | 'tts' | 'election' | 'article' | 'atlas'
   size: 'lead' | 'third' | 'half'
 }
 
@@ -106,6 +106,13 @@ export const work: WorkItem[] = [
     href: 'https://shopmate.si',
     viz: 'shop',
     size: 'lead',
+  },
+  {
+    title: 'Scout',
+    line: 'An always-on agent that finds buyers, researches each one from public sources and writes the brief. Every claim carries a source.',
+    meta: 'MediaStack · 2026',
+    viz: 'scout',
+    size: 'third',
   },
   {
     title: 'Nepali speech at newsroom speed',
@@ -134,14 +141,14 @@ export const work: WorkItem[] = [
     line: 'A story goes in; a narrated video comes out and publishes itself to three platforms.',
     meta: 'Kantipur · 2024–26',
     viz: 'article',
-    size: 'half',
+    size: 'third',
   },
   {
     title: 'Atlas',
     line: 'Speech for 40 regional languages: datasets, per-language quality benchmarks, deployment.',
     meta: 'M&S AI Labs · ongoing',
     viz: 'atlas',
-    size: 'half',
+    size: 'third',
   },
 ]
 

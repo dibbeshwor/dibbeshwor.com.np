@@ -5,13 +5,14 @@
  */
 import { useReducedMotion } from '../hooks/useReducedMotion'
 
-export type VizKind = 'astro' | 'shop' | 'cutaway' | 'tts' | 'election' | 'article' | 'atlas'
+export type VizKind = 'astro' | 'shop' | 'cutaway' | 'scout' | 'tts' | 'election' | 'article' | 'atlas'
 
 export function Viz({ kind }: { kind: VizKind }) {
   switch (kind) {
     case 'astro': return <AstroViz />
     case 'shop': return <ShopViz />
     case 'cutaway': return <CutawayViz />
+    case 'scout': return <ScoutViz />
     case 'tts': return <TtsViz />
     case 'election': return <ElectionViz />
     case 'article': return <ArticleViz />
@@ -104,6 +105,43 @@ function CutawayViz() {
         <g className="clip c3"><rect x="212" y="104" width="68" height="40" rx="6" /><path d="M242 118 l8 6 l-8 6 z" /></g>
       </g>
       <text className="tag" x="24" y="170">42:17 → 3 clips</text>
+    </svg>
+  )
+}
+
+/* a radar sweep over a field of companies; the ones it finds become a cited, scored brief */
+function ScoutViz() {
+  const cx = 92, cy = 86
+  // angle clockwise from top, radius; `hit` dots light up as the sweep passes (delay = angle / 360 * 6s)
+  const cos = [
+    [40, 52, true], [75, 30, false], [110, 60, true], [130, 24, false], [150, 40, false], [200, 58, true],
+    [235, 36, false], [270, 62, true], [300, 44, false], [330, 56, true], [350, 66, false], [15, 22, false],
+  ] as const
+  return (
+    <svg className="viz viz-scout" viewBox="0 0 320 180" aria-hidden="true">
+      <g className="rings"><circle cx={cx} cy={cy} r="24" /><circle cx={cx} cy={cy} r="46" /><circle cx={cx} cy={cy} r="68" /></g>
+      <g className="sweep">
+        <path d={`M${cx} ${cy} L${cx} ${cy - 68} A68 68 0 0 0 53 30.3 Z`} />
+        <line x1={cx} y1={cy} x2={cx} y2={cy - 68} />
+      </g>
+      <g className="co">
+        {cos.map(([a, r, hit], i) => {
+          const t = ((a - 90) * Math.PI) / 180
+          return (
+            <circle key={i} className={hit ? 'hit' : undefined} cx={cx + Math.cos(t) * r} cy={cy + Math.sin(t) * r} r="2.6"
+              style={hit ? { animationDelay: `${(a / 360) * 6}s` } : undefined} />
+          )
+        })}
+      </g>
+      <g className="brief">
+        <rect x="186" y="34" width="110" height="96" rx="8" />
+        <text className="big" x="200" y="68">82</text>
+        <text className="tag" x="232" y="68">/ 100</text>
+        <rect className="ln" x="200" y="84" width="58" height="4" rx="2" /><circle className="src" cx="276" cy="86" r="3.2" style={{ animationDelay: '0.9s' }} />
+        <rect className="ln" x="200" y="98" width="66" height="4" rx="2" /><circle className="src" cx="276" cy="100" r="3.2" style={{ animationDelay: '2.1s' }} />
+        <rect className="ln" x="200" y="112" width="48" height="4" rx="2" /><circle className="src" cx="276" cy="114" r="3.2" style={{ animationDelay: '3.6s' }} />
+      </g>
+      <text className="tag" x="24" y="170">found → researched → cited → scored</text>
     </svg>
   )
 }
