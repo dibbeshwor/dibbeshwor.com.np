@@ -7,33 +7,39 @@ const ArrowDown = () => (
   </svg>
 )
 
-/** one-time entrance stagger, in ms */
+/** one-time entrance stagger, in ms. The stars arrive first; the words follow. */
 const at = (ms: number) => ({ '--d': `${ms}ms` }) as React.CSSProperties
-const WORD_START = 60
-const WORD_STEP = 55
+const START = 700
+const WORD_STEP = 70
 
 export function Hero() {
-  const afterWords = WORD_START + WORD_STEP * hero.words.length + 70
+  const afterWords = START + WORD_STEP * hero.words.length + 90
   return (
     <section className="hero wrap" aria-labelledby="hero-title">
-      <p className="hello rise" style={at(0)}>{hero.hello}</p>
+      <p className="hello rise" style={at(START - 200)}>
+        <span className="orbit-dot" aria-hidden="true" />
+        {hero.hello}
+      </p>
       <h1 id="hero-title">
         {hero.words.map((w, i) => (
-          <span key={w} className="w rise" style={at(WORD_START + WORD_STEP * i)}>{w}</span>
+          <span key={w} className="w rise" style={at(START + WORD_STEP * i)}>{w}</span>
         ))}
-        <em className="s w rise" style={at(afterWords)}>{hero.accent}</em>
+        <span className="w rise" style={at(afterWords)}><em className="s">{hero.accent}</em></span>
       </h1>
-      <p className="lede rise" style={at(afterWords + 80)}>{hero.lede}</p>
-      <div className="actions rise" style={at(afterWords + 160)}>
+      <p className="lede rise" style={at(afterWords + 100)}>{hero.lede}</p>
+      <div className="actions rise" style={at(afterWords + 200)}>
         <MagnetLink href="#work" className="btn primary">
           See the work <ArrowDown />
         </MagnetLink>
         <CopyButton value={site.email} className="btn" />
       </div>
-      <div className="meta rise" style={at(afterWords + 240)}>
+      <div className="meta rise" style={at(afterWords + 300)}>
         {hero.meta.map((m) => <span key={m}>{m}</span>)}
       </div>
-      <div className="scroll-cue" aria-hidden="true"><i />scroll</div>
+      <div className="scroll-cue rise" style={at(afterWords + 700)} aria-hidden="true"><i />scroll</div>
+      <div className="coords rise" style={at(afterWords + 700)} aria-hidden="true">
+        <span>27.7172° N</span><span>85.3240° E</span><span>1,400 m</span>
+      </div>
     </section>
   )
 }

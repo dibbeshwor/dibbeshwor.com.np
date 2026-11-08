@@ -4,7 +4,14 @@ import { CopyButton } from './Buttons'
 export function Contact() {
   return (
     <section className="block contact" id="contact" aria-labelledby="contact-title">
+      <div className="horizon" aria-hidden="true">
+        <span className="disk" />
+        <span className="disk back" />
+        <span className="hole" />
+        <span className="lens" />
+      </div>
       <div className="wrap">
+        <p className="kicker reveal"><span className="n">§</span>Transmission</p>
         <h2 id="contact-title" className="reveal" style={{ '--i': 1 } as React.CSSProperties}>Let’s <em className="s">talk.</em></h2>
         <p className="lede reveal" style={{ '--i': 2 } as React.CSSProperties}>{contact.lede}</p>
         <div className="actions reveal" style={{ '--i': 3 } as React.CSSProperties}>

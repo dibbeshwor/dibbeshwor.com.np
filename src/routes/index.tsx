@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Field } from '../components/Field'
+import { Cosmos } from '../components/Cosmos'
+import { Cursor } from '../components/Cursor'
 import { Nav } from '../components/Nav'
 import { Hero } from '../components/Hero'
 import { Chapters } from '../components/Chapters'
@@ -15,7 +16,8 @@ function Home() {
   useReveal()
   return (
     <>
-      <Field />
+      <Cosmos />
+      <Cursor />
       <Nav />
       <main id="top">
         <Hero />

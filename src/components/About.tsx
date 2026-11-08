@@ -34,7 +34,10 @@ export function About() {
     <section className="block" id="about" aria-labelledby="about-title">
       <div className="wrap">
         <div className="head reveal">
-          <h2 id="about-title">Between the model and <em className="s">the people.</em></h2>
+          <div>
+            <p className="kicker"><span className="n">§</span>About</p>
+            <h2 id="about-title">Between the model and <em className="s">the people.</em></h2>
+          </div>
         </div>
         <div className="about">
           <div className="reveal" style={{ '--i': 1 } as React.CSSProperties}>

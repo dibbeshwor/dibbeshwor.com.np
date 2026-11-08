@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Field } from '../components/Field'
+import { Cosmos } from '../components/Cosmos'
 import { site } from '../content'
 
 export const Route = createFileRoute('/$')({
@@ -12,7 +12,7 @@ export const Route = createFileRoute('/$')({
 function NotFound() {
   return (
     <>
-      <Field />
+      <Cosmos />
       <main className="nf">
         <div className="wrap">
           <p className="hello">404</p>
