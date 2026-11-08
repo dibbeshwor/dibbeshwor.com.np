@@ -1,15 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { chapters } from '../content'
-import { progress } from '../lib/cosmos'
 import { useReducedMotion } from '../hooks/useReducedMotion'
 
 const smooth = (x: number) => x * x * (3 - 2 * x)
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 
 /**
- * The pinned section. Scroll position drives both the sky's formation and which
- * chapter's text is on screen. The hero holds the galaxy (formation 0); chapter i
- * owns formation i + 1; past the end the field scatters into dust (5).
+ * The pinned section. Scroll position decides which chapter's text is on screen;
+ * the sky itself is driven separately (see lib/journey.ts) from the same scroll.
  * Styles are written straight to the DOM inside one rAF per scroll event.
  */
 export function Chapters() {
@@ -34,25 +32,6 @@ export function Chapters() {
       const len = section.offsetHeight - vh
       const p = y < top ? 0 : y < top + len ? (y - top) / len : 1
       const seg = p * n
-      const idx = Math.min(n - 1, Math.floor(seg))
-      const local = seg - idx
-
-      let f: number
-      if (y < top) {
-        // the galaxy begins to gather into the wave as the hero leaves
-        f = clamp01((y - (top - vh * 0.5)) / (vh * 0.5)) * 0.35
-      } else if (y < top + len) {
-        // the first 22% of chapter one finishes the galaxy → wave morph; later chapters morph in their last 45%
-        const lead = idx === 0 ? 0.35 + clamp01(local / 0.22) * 0.65 : idx + 1
-        const morph = idx < n - 1 ? clamp01((local - 0.55) / 0.45) : 0
-        f = idx === 0 && local < 0.22 ? lead : idx + 1 + morph
-      } else {
-        f = n + Math.min(1, (y - (top + len)) / (vh * 0.9))
-      }
-      if (reduce) f = y < top ? 0 : y < top + len ? idx + 1 : n + 1
-      progress.f = f
-      document.body.classList.toggle('is-content', y > top + len + vh * 0.2)
-
       els.forEach((el, i) => {
         const l = seg - i
         let vis = 0
@@ -86,8 +65,6 @@ export function Chapters() {
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
-      document.body.classList.remove('is-content')
-      progress.f = 0
     }
   }, [reduce])
 

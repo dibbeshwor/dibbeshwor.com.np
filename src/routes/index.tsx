@@ -9,11 +9,13 @@ import { About } from '../components/About'
 import { Experience } from '../components/Experience'
 import { Contact, Footer } from '../components/Contact'
 import { useReveal } from '../hooks/useReveal'
+import { useJourney } from '../hooks/useJourney'
 
 export const Route = createFileRoute('/')({ component: Home })
 
 function Home() {
   useReveal()
+  useJourney()
   return (
     <>
       <Cosmos />
