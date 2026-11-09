@@ -41,6 +41,18 @@
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
   button { font: inherit; color: inherit; }
   html.has-cursor, html.has-cursor a, html.has-cursor button { cursor: none; }
+  .skip {
+    position: fixed; top: 12px; left: 12px; z-index: 200;
+    padding: 10px 14px; border-radius: 999px; background: var(--fg); color: var(--bg);
+    font-weight: 500; font-size: 14px; text-decoration: none;
+    transform: translateY(-200%); opacity: 0;
+    transition: transform 200ms var(--ease-out), opacity 200ms ease;
+  }
+  .skip:focus-visible { transform: none; opacity: 1; outline-offset: 2px; }
+  /* social image capture: scripts/make-og.mjs opens /?og */
+  body.og .nav, body.og .scroll-cue, body.og .coords, body.og .grain, body.og .cursor-dot, body.og .cursor-ring { display: none; }
+  body.og .hero { min-height: 100vh; padding-top: 48px; padding-bottom: 48px; }
+  body.og .hero .meta { margin-top: 36px; }
 
   /* ---------- the sky ---------- */
   #field {
@@ -126,7 +138,7 @@
   .brand {
     display: inline-flex; align-items: center; gap: 10px;
     text-decoration: none; font-weight: 500; letter-spacing: -0.01em; font-size: 15px;
-    font-family: var(--display); font-variation-settings: "opsz" 20, "SOFT" 40;
+    font-family: var(--display); font-variation-settings: "opsz" 20;
   }
   .brand .dot {
     width: 8px; height: 8px; border-radius: 50%;
@@ -160,11 +172,11 @@
   }
   .kicker .n { color: var(--accent); }
   .kicker::after { content: ""; width: 40px; height: 1px; background: linear-gradient(90deg, var(--line-2), transparent); }
-  h1, h2, h3 { font-family: var(--display); margin: 0; font-weight: 400; letter-spacing: -0.02em; text-wrap: balance; font-variation-settings: "opsz" 144, "SOFT" 30; }
+  h1, h2, h3 { font-family: var(--display); margin: 0; font-weight: 400; letter-spacing: -0.02em; text-wrap: balance; font-variation-settings: "opsz" 144; }
   h2 { font-size: clamp(38px, 5.2vw, 66px); line-height: 1.0; }
   em.s {
     font-family: var(--serif); font-style: italic; font-weight: 300; letter-spacing: -0.01em;
-    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    font-variation-settings: "opsz" 144;
     background: linear-gradient(100deg, #ffe4c4 0%, var(--accent) 35%, #ff8fb0 70%, var(--accent-2) 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -275,7 +287,7 @@
   .chapter .fig {
     margin-top: 26px; display: flex; gap: 32px; flex-wrap: wrap;
   }
-  .chapter .fig b { display: block; font-family: var(--display); font-weight: 300; font-size: 34px; letter-spacing: -0.03em; line-height: 1; font-variation-settings: "opsz" 72, "SOFT" 50; }
+  .chapter .fig b { display: block; font-family: var(--display); font-weight: 300; font-size: 34px; letter-spacing: -0.03em; line-height: 1; font-variation-settings: "opsz" 72; }
   .chapter .fig small { display: block; margin-top: 6px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: 0.02em; }
   .counter {
     position: absolute; left: var(--gutter); top: 96px;
@@ -349,7 +361,7 @@
     .card:hover .arrow { transform: translate(2px, -2px); color: var(--accent); }
   }
   .card .body { display: flex; flex-direction: column; gap: 8px; padding: 0 10px; transform: translateZ(24px); }
-  .card h3 { font-size: 24px; line-height: 1.12; letter-spacing: -0.02em; display: flex; align-items: baseline; gap: 8px; font-variation-settings: "opsz" 48, "SOFT" 30; }
+  .card h3 { font-size: 24px; line-height: 1.12; letter-spacing: -0.02em; display: flex; align-items: baseline; gap: 8px; font-variation-settings: "opsz" 48; }
   .card.lead h3 { font-size: 30px; }
   .card .arrow { font-size: 0.7em; color: var(--muted); transition: transform 200ms var(--ease-out), color 200ms ease; font-family: var(--body); }
   .card p { margin: 0; color: var(--fg-2); font-size: 15px; max-width: 48ch; text-wrap: pretty; }
@@ -464,7 +476,7 @@
   .more { margin-top: 40px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px 24px; }
   .more .lbl { grid-column: span 12; font-size: 12px; color: var(--muted); margin: 0 0 4px; font-family: var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
   .more .item { grid-column: span 4; padding: 16px 0; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--fg-2); }
-  .more .item b { display: block; color: var(--fg); font-weight: 400; margin-bottom: 2px; font-family: var(--display); font-size: 17px; font-variation-settings: "opsz" 24, "SOFT" 30; }
+  .more .item b { display: block; color: var(--fg); font-weight: 400; margin-bottom: 2px; font-family: var(--display); font-size: 17px; font-variation-settings: "opsz" 24; }
 
   /* ---------- about ---------- */
   .about { display: grid; grid-template-columns: 7fr 5fr; gap: 56px; align-items: start; }
@@ -472,7 +484,7 @@
   .about p strong { color: var(--fg); font-weight: 500; }
   .about p:first-child::first-letter {
     font-family: var(--display); font-weight: 300; font-size: 3.4em; float: left; line-height: 0.82; margin: 0.08em 0.12em 0 0;
-    color: var(--accent); font-variation-settings: "opsz" 144, "SOFT" 100;
+    color: var(--accent); font-variation-settings: "opsz" 144;
   }
   .now {
     position: relative;
@@ -506,7 +518,7 @@
   .xp li { display: grid; grid-template-columns: 150px 1fr auto; gap: 24px; padding: 22px 0; border-top: 1px solid var(--line); align-items: baseline; }
   .xp li:last-child { border-bottom: 1px solid var(--line); }
   .xp .y { font-family: var(--mono); font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .xp .r b { font-weight: 400; display: block; font-family: var(--display); font-size: 20px; font-variation-settings: "opsz" 24, "SOFT" 30; letter-spacing: -0.01em; }
+  .xp .r b { font-weight: 400; display: block; font-family: var(--display); font-size: 20px; font-variation-settings: "opsz" 24; letter-spacing: -0.01em; }
   .xp .r span { color: var(--muted); font-size: 14.5px; }
   .xp .tag { font-family: var(--mono); font-size: 11px; color: var(--accent); border: 1px solid rgba(255,176,112,0.35); padding: 3px 8px; border-radius: 999px; box-shadow: 0 0 14px rgba(255,176,112,0.2); }
   .orbit-wrap { display: grid; place-items: center; }
@@ -569,6 +581,9 @@
     .grain { opacity: 0.05; }
   }
 
+  @media (max-width: 640px) {
+    .nav-links a[href="#experience"] { display: none; }
+  }
   @media (max-width: 480px) {
     .nav-links a[href="#about"] { display: none; }
   }

@@ -133,7 +133,7 @@ export const particlesVert = /* glsl */ `
     }
 
     // every star takes its own small detour mid-morph, so the field never slides as one block
-    float bulge = sin(w * 3.14159) * (1.0 + 3.0 * aSeed.y);
+    float bulge = sin(w * 3.14159) * (0.4 + 1.2 * aSeed.y);
     p += vec3(aSeed.x - 0.5, aSeed.y - 0.5, aSeed.z - 0.5) * 2.0 * bulge;
 
     // arrival

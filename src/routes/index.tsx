@@ -1,6 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Cosmos } from '../components/Cosmos'
-import { Cursor } from '../components/Cursor'
 import { Nav } from '../components/Nav'
 import { Hero } from '../components/Hero'
 import { Chapters } from '../components/Chapters'
@@ -18,8 +16,6 @@ function Home() {
   useJourney()
   return (
     <>
-      <Cosmos />
-      <Cursor />
       <Nav />
       <main id="top">
         <Hero />

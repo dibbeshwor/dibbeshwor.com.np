@@ -54,7 +54,19 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   let W = 0, H = 0, DPR = 1, wide = true, narrow = false
   const mobile = window.matchMedia('(max-width: 700px)').matches || /Mobi|Android/i.test(navigator.userAgent)
   const N = mobile ? 6000 : 14000
+  performance.mark('cosmos:build:start')
+  /**
+   * Quality steps down, never up. Once the stars have arrived we watch frame
+   * times; a slow median drops pixel ratio and draws fewer stars. Formations
+   * are laid out so the last indices are the least important (haze, sky, sea).
+   */
+  let dprCap = mobile ? 1.75 : 2
+  let tier = 0
+  const samples: number[] = []
+  let settled = reduce
   const F = buildFormations(N)
+  performance.mark('cosmos:build:end')
+  performance.measure('cosmos:build', 'cosmos:build:start', 'cosmos:build:end')
 
   /* ------------------------------------------------------------------ particles */
   const geo = new BufferGeometry()
@@ -191,8 +203,15 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   let nextMeteor = 2.5
 
   /* ------------------------------------------------------------------ layout */
+  function stepDown() {
+    tier++
+    if (tier === 1) { dprCap = Math.min(dprCap, 1.25); geo.setDrawRange(0, Math.floor(N * 0.75)) }
+    else { dprCap = 1; geo.setDrawRange(0, Math.floor(N * 0.55)); settled = true }
+    layout()
+  }
+
   function layout() {
-    DPR = Math.min(window.devicePixelRatio || 1, mobile ? 1.75 : 2)
+    DPR = Math.min(window.devicePixelRatio || 1, dprCap)
     W = window.innerWidth; H = window.innerHeight
     wide = W > 900; narrow = W < 600
     renderer.setPixelRatio(DPR)
@@ -241,6 +260,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   let running = true
   let elapsed = 0
   let last = performance.now()
+  let frameNo = 0
   // earth's spin: free until the content sections, then eased so Nepal faces the camera
   let yaw = -0.6, freeYaw = -0.6, frozenYaw = 0, frozen = false
   const nepal = new Vector3()
@@ -249,6 +269,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
 
   function frame() {
     if (!running) return
+    if (frameNo === 0) performance.mark('cosmos:frame0:start')
     const now = performance.now()
     const dt = Math.min(0.05, (now - last) / 1000)
     last = now
@@ -259,6 +280,17 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     const heroScroll = clamp01(window.scrollY / Math.max(1, H))
 
     if (warp > 0) { warp = Math.max(0, warp - dt / 2.2); pU.uWarp.value = smooth(warp) }
+    else if (!settled) {
+      samples.push(dt)
+      if (samples.length >= 90) {
+        const sorted = samples.slice().sort((a, b) => a - b)
+        const median = sorted[45]
+        samples.length = 0
+        if (median > 0.024) stepDown()   // under ~40 fps
+        else settled = true
+      }
+    }
+    frameNo++
 
     // palette drifts toward the stop we are nearest
     const pal = PALETTES[level]
@@ -366,10 +398,13 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
       }
     }
 
-    renderer.setRenderTarget(nebTarget)
-    renderer.render(nebScene, camera)
-    renderer.setRenderTarget(null)
+    if (tier < 2 || frameNo % 2 === 0) {
+      renderer.setRenderTarget(nebTarget)
+      renderer.render(nebScene, camera)
+      renderer.setRenderTarget(null)
+    }
     renderer.render(scene, camera)
+    if (frameNo === 1) { performance.mark('cosmos:frame0:end'); performance.measure('cosmos:frame0', 'cosmos:frame0:start', 'cosmos:frame0:end') }
     raf = requestAnimationFrame(frame)
   }
 
@@ -382,12 +417,24 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     if (running) { last = performance.now(); raf = requestAnimationFrame(frame) }
     else cancelAnimationFrame(raf)
   }
+  // a backgrounded tab can lose its GL context; three rebuilds its caches on restore, we rebuild the offscreen target
+  const onLost = (e: Event) => { e.preventDefault(); running = false; cancelAnimationFrame(raf) }
+  const onRestored = () => {
+    nebTarget.dispose()
+    layout()
+    running = !document.hidden
+    if (running) { last = performance.now(); raf = requestAnimationFrame(frame) }
+  }
   window.addEventListener('pointermove', onMove, { passive: true })
   window.addEventListener('pointerleave', onLeave)
   window.addEventListener('resize', onResize)
   document.addEventListener('visibilitychange', onVisibility)
+  canvas.addEventListener('webglcontextlost', onLost)
+  canvas.addEventListener('webglcontextrestored', onRestored)
 
   layout()
+  performance.mark('cosmos:init:end')
+  performance.measure('cosmos:init', 'cosmos:build:end', 'cosmos:init:end')
   raf = requestAnimationFrame(frame)
 
   return function destroy() {
@@ -397,6 +444,8 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     window.removeEventListener('pointerleave', onLeave)
     window.removeEventListener('resize', onResize)
     document.removeEventListener('visibilitychange', onVisibility)
+    canvas.removeEventListener('webglcontextlost', onLost)
+    canvas.removeEventListener('webglcontextrestored', onRestored)
     scene.traverse((o) => {
       const m = o as Mesh
       if (m.geometry) m.geometry.dispose()

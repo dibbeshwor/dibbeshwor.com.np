@@ -4,6 +4,8 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import './index.css'
 
+if (new URLSearchParams(window.location.search).has('og')) document.body.classList.add('og')
+
 const router = createRouter({ routeTree })
 
 declare module '@tanstack/react-router' {

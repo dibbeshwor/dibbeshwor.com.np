@@ -30,6 +30,7 @@ export function Nav() {
       <nav className="nav-links" aria-label="Page sections">
         <a href="#work">Work</a>
         <a href="#about">About</a>
+        <a href="#experience">Experience</a>
         <a href="#contact">Contact</a>
         <a className="cta" href={`mailto:${site.email}`}>Say hello</a>
       </nav>

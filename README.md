@@ -48,3 +48,9 @@ pnpm deploy     # build, then wrangler deploy
 - `prefers-reduced-motion` is respected: the sky holds still and switches formation without morphing, there is no warp-in, no meteors, no pointer repulsion, reveals become fades, the marquee is static, cards don't tilt and the native cursor is kept.
 - The canvas is `aria-hidden`; all content is plain HTML underneath it. Without WebGL the page falls back to a CSS nebula.
 - The nebula shader renders at a third of the resolution and is composited behind the scene; particle counts and pixel ratio are lower on phones.
+- Quality adapts downward: after the stars arrive the scene watches frame times and, if the median is under ~40 fps, lowers pixel ratio and draws fewer stars (formations put their least important points last). A lost WebGL context pauses the loop and rebuilds on restore.
+- Startup phases are marked (`cosmos:build`, `cosmos:init`, `cosmos:frame0`) and show up in the DevTools performance panel.
+
+## Social image
+
+`public/og_image.png` is a capture of the live hero. To regenerate after a visual change: build, run `vite preview`, then `node scripts/make-og.mjs` (needs `playwright-core` and a Chromium; see the script header). Downscale the 2× capture with `sips -z 630 1200 public/og_image.png`.
