@@ -5,6 +5,8 @@ import { routeTree } from './routeTree.gen'
 import './index.css'
 
 if (new URLSearchParams(window.location.search).has('og')) document.body.classList.add('og')
+// the static <title> in index.html is for crawlers; from here on each route sets its own
+document.querySelector('head > title')?.remove()
 
 const router = createRouter({ routeTree })
 

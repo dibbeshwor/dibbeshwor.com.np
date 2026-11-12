@@ -60,8 +60,21 @@
   .skip:focus-visible { transform: none; opacity: 1; outline-offset: 2px; }
   /* social image capture: scripts/make-og.mjs opens /?og */
   body.og .nav, body.og .scroll-cue, body.og .coords, body.og .grain, body.og .cursor-dot, body.og .cursor-ring { display: none; }
-  body.og .hero { min-height: 100vh; padding-top: 48px; padding-bottom: 48px; }
-  body.og .hero .meta { margin-top: 36px; }
+  /* the social image: all sky, a signature in the corner */
+  .og-sign { display: none; }
+  body.og .hero { min-height: 100vh; padding: 0; }
+  body.og .hero::before, body.og .hero > :not(.og-sign), body.og .vignette { display: none; }
+  body.og .og-sign { display: block; position: absolute; left: 64px; bottom: 54px; }
+  .og-name {
+    margin: 0; font-family: var(--display); font-weight: 300; font-size: 58px; line-height: 1; letter-spacing: -0.03em;
+    font-variation-settings: "opsz" 144;
+    text-shadow: 0 2px 26px rgba(251,247,241,0.95), 0 0 10px rgba(251,247,241,0.7);
+  }
+  .og-name em.s { animation: none; background-position: 30% 50%; }
+  .og-role {
+    margin: 14px 0 0 3px; font-family: var(--mono); font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-2);
+    text-shadow: 0 1px 12px rgba(251,247,241,1);
+  }
 
   /* ---------- the sky ---------- */
   #field {

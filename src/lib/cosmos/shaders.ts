@@ -268,9 +268,9 @@ export const nebulaFrag = /* glsl */ `
     float wb = clamp((pow(n2, 1.9) * 2.4 + fil2 * 0.25) * lobeB, 0.0, 1.0);
     float wc = clamp(pow(n1 * n2, 1.1) * lobeC * 3.4, 0.0, 1.0);
     vec3 col = uPaper;
-    col = mix(col, uColA, wa * uDim);
-    col = mix(col, uColB, wb * uDim);
-    col = mix(col, uColC, wc * uDim);
+    col = mix(col, uColA, min(wa * uDim, 1.0));
+    col = mix(col, uColB, min(wb * uDim, 1.0));
+    col = mix(col, uColC, min(wc * uDim, 1.0));
     // dawn: pale blue overhead, a band of peach along the horizon, a thread of butter where the sun will be
     float hz = clamp(exp(-abs(vUv.y - 0.36) * 6.0) * (0.7 + 0.5 * n1), 0.0, 1.0);
     vec3 dawn = mix(uPaper, uColA, smoothstep(0.3, 1.0, vUv.y) * (0.55 + 0.45 * n2));
@@ -305,7 +305,8 @@ export const paintFrag = /* glsl */ `
   uniform float uReach;     // the furthest a stroke's middle can be, device px
   uniform vec2  uDrift;     // device px; the paint travels with the clouds
   uniform float uPaint;     // 0 a smooth wash · 1 paint
-  uniform float uPx;        // device px per css px, so the grain is the same size everywhere
+  uniform float uImpasto;   // how thick it's laid on; 1 on the site, more for the social image
+  uniform float uPx;       // device px per css px, so the grain is the same size everywhere
   uniform float uGrain;     // which grain; steps a few times a second
 
   // a hash without sin, steady on every GPU
@@ -320,9 +321,9 @@ export const paintFrag = /* glsl */ `
     vec2 toMiddle = (r.xy * 255.0 - 128.0) / 127.0 * uReach;
     vec3 c = texture2D(uWash, (gl_FragCoord.xy + toMiddle * 0.85 * uPaint) / uRes).rgb;
     // no two strokes quite the same mix
-    c *= 1.0 + (r.a - 0.5) * 0.05 * uPaint;
+    c *= 1.0 + (r.a - 0.5) * 0.05 * uPaint * uImpasto;
     // ridges catch the light from the upper left, furrows hold a little shadow
-    float shade = (r.b - 0.5) * uPaint;
+    float shade = (r.b - 0.5) * uPaint * uImpasto;
     c = c * (1.0 + shade * 0.16) + max(shade, 0.0) * 0.025;
     // film grain, the tooth of the paper
     c *= 1.0 - 0.075 * hash(floor(gl_FragCoord.xy / uPx) + uGrain * vec2(113.0, 71.0));

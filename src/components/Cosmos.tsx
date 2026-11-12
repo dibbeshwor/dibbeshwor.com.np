@@ -23,7 +23,7 @@ export function Cosmos() {
       ({ createCosmos }) => {
         if (gone) return
         try {
-          destroy = createCosmos(canvas, { reduceMotion: reduce })
+          destroy = createCosmos(canvas, { reduceMotion: reduce, og: document.body.classList.contains('og') })
         } catch {
           // no WebGL: the nebula gradient in CSS stands in
           noGL()

@@ -58,8 +58,13 @@ const TILT = new Matrix3().set(
   TILT.premultiply(roll)
 }
 
-export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: boolean }) {
+/**
+ * `og` sets the scene up for the social image: paint laid on thicker, fuller washes, and
+ * none of the fine lines or meteors that read as noise at thumbnail size.
+ */
+export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: boolean; og?: boolean }) {
   const reduce = opts.reduceMotion
+  const og = !!opts.og
   const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' })
   renderer.setClearColor(new Color(PAPER), 1)
   const scene = new Scene()
@@ -167,7 +172,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const bU = {
     uWash: { value: nebTarget.texture }, uRelief: { value: relief },
     uRes: { value: new Vector2(1, 1) }, uTile: { value: TILE }, uReach: { value: REACH }, uDrift: { value: new Vector2() }, uPaint: { value: 0 },
-    uPx: { value: 1 }, uGrain: { value: 0 },
+    uPx: { value: 1 }, uGrain: { value: 0 }, uImpasto: { value: og ? 2.2 : 1 },
   }
   const blit = new Mesh(new PlaneGeometry(2, 2), new ShaderMaterial({
     vertexShader: S.paintVert, fragmentShader: S.paintFrag, uniforms: bU, depthTest: false, depthWrite: false,
@@ -303,6 +308,11 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
       pU.uEScale.value = 0.58
       pU.uKScale.value = 0.5
     }
+    if (og) {
+      // the galaxy is the subject: nearer, and in fatter dabs that hold up as a thumbnail
+      pU.uOffG.value.set(11, 1, -2)
+      pU.uScale.value = sU.uScale.value = 1.05
+    }
     // the arm we dive into
     pU.uPivot0.value.set(7, 0, 4).applyMatrix3(TILT).add(pU.uOffG.value)
     return true
@@ -371,7 +381,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     // the clouds slide by -shift / 1.5 (see nebulaFrag); the paint slides with them
     bU.uDrift.value.set((nU.uShift.value.x / 1.5) * H * DPR, (nU.uShift.value.y / 1.5) * H * DPR)
     if (paintReady && bU.uPaint.value < 1) bU.uPaint.value = reduce ? 1 : Math.min(1, bU.uPaint.value + dt / 1.2)
-    nU.uDim.value = nebDim
+    nU.uDim.value = og ? nebDim * 1.6 : nebDim
     nU.uHorizon.value = horizon
     sU.uDim.value = 1 - horizon * 0.6
 
@@ -431,7 +441,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     }
 
     // constellation over the galaxy only
-    const cOp = (1 - clamp01(f * 2)) * (1 - warp) * (1 - z * 0.6) * 0.42
+    const cOp = og ? 0 : (1 - clamp01(f * 2)) * (1 - warp) * (1 - z * 0.6) * 0.42
     cMat.opacity = cOp
     constellation.visible = cOp > 0.005
     if (constellation.visible) {
@@ -443,7 +453,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     }
 
     // meteors
-    if (!reduce && warp <= 0) {
+    if (!reduce && !og && warp <= 0) {
       nextMeteor -= dt
       if (nextMeteor <= 0) {
         const m = meteors.find((x) => !x.active)

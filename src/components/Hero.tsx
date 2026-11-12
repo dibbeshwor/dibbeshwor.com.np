@@ -40,6 +40,11 @@ export function Hero() {
       <div className="coords rise" style={at(afterWords + 700)} aria-hidden="true">
         <span>27.7172° N</span><span>85.3240° E</span><span>1,400 m</span>
       </div>
+      {/* only in the social image (?og): the painted sky and a signature */}
+      <div className="og-sign" aria-hidden="true">
+        <p className="og-name">{site.short} <em className="s">{site.name.split(' ').slice(1).join(' ')}</em></p>
+        <p className="og-role">AI engineer · Kathmandu</p>
+      </div>
     </section>
   )
 }

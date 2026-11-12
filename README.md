@@ -57,4 +57,4 @@ pnpm deploy     # build, then wrangler deploy
 
 ## Social image
 
-`public/og_image.png` is a capture of the live hero. To regenerate after a visual change: build, run `vite preview`, then `node scripts/make-og.mjs` (needs `playwright-core` and a Chromium; see the script header). Downscale the 2× capture with `sips -z 630 1200 public/og_image.png`.
+`public/og_image.jpg` is a capture of the live sky in `?og` mode (thicker paint, a signature instead of the hero copy). To regenerate after a visual change: build, run `vite preview`, then `node scripts/make-og.mjs` (needs `playwright-core` and a Chromium; see the script header). It captures at 2× and saves a 1200×630 JPEG with macOS `sips`; keep it under 1 MB.
