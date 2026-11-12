@@ -77,14 +77,14 @@ export function buildFormations(N: number): Formations {
   /* ------------------------------------------------------------ solar system */
   {
     const planets = [
-      { r: 4.5, body: 0.42, c: '#c9c2b8', n: 0.006 },
-      { r: 6.5, body: 0.72, c: '#f3dcae', n: 0.010 },
-      { r: EARTH_ORBIT.r, body: 0.78, c: '#6fb4ff', n: 0.012, angle0: EARTH_ORBIT.angle0 },
-      { r: 11, body: 0.55, c: '#ff8f5e', n: 0.008 },
-      { r: 19, body: 1.35, c: '#e9c59c', n: 0.02 },
-      { r: 23.5, body: 1.15, c: '#f1dba6', n: 0.015, ring: [1.7, 2.7] as [number, number] },
-      { r: 27, body: 1.2, c: '#a6ecff', n: 0.016 },
-      { r: 30.5, body: 1.2, c: '#7390ff', n: 0.016 },
+      { r: 4.5, body: 0.42, c: '#a99d94', n: 0.006 },
+      { r: 6.5, body: 0.72, c: '#e8b45c', n: 0.010 },
+      { r: EARTH_ORBIT.r, body: 0.78, c: '#5a96e6', n: 0.012, angle0: EARTH_ORBIT.angle0 },
+      { r: 11, body: 0.55, c: '#ea6a42', n: 0.008 },
+      { r: 19, body: 1.35, c: '#e09a6e', n: 0.02 },
+      { r: 23.5, body: 1.15, c: '#e2b45e', n: 0.015, ring: [1.7, 2.7] as [number, number] },
+      { r: 27, body: 1.2, c: '#5fc4c4', n: 0.016 },
+      { r: 30.5, body: 1.2, c: '#6478e6', n: 0.016 },
     ]
     const speedAt = (r: number) => EARTH_ORBIT.speed * Math.pow(EARTH_ORBIT.r / r, 1.5)
     // slots: [start, end) fractions of N
@@ -99,17 +99,17 @@ export function buildFormations(N: number): Formations {
       const rr = shell ? R : R * Math.cbrt(rand(i, salt + 2))
       return [rr * Math.sin(ph) * Math.cos(th), rr * Math.cos(ph), rr * Math.sin(ph) * Math.sin(th)] as const
     }
-    const sunCore = hex('#fff3dc'), sunEdge = hex('#ffb45a')
+    const sunCore = hex('#ffc85e'), sunEdge = hex('#f27e54')
     plan.push({ frac: 0.055, fill: (i) => {
       const [x, y, z] = onSphere(i, 2.4, 40, false)
       const d = Math.hypot(x, y, z) / 2.4
       set(i, 0, 0, 0, 1, x, y, z, mixc(sunCore, sunEdge, d))
     } })
-    const dustCol = hex('#a9b8ff')
+    const dustCol = hex('#9288e2')
     plan.push({ frac: 0.17, fill: (i, j, count) => {
       const p = planets[j % planets.length]
       const r = p.r + gauss(i, 43) * 0.12
-      set(i, r, rand(i, 44) * Math.PI * 2, speedAt(p.r), 0.28, 0, gauss(i, 45) * 0.08, 0, dustCol)
+      set(i, r, rand(i, 44) * Math.PI * 2, speedAt(p.r), 0.34, 0, gauss(i, 45) * 0.08, 0, dustCol)
       void count
     } })
     for (const p of planets) {
@@ -120,27 +120,27 @@ export function buildFormations(N: number): Formations {
         set(i, p.r, p.angle0 ?? rand(0, p.r) * Math.PI * 2, speedAt(p.r), 1, x, y, z, [col[0] * shade, col[1] * shade, col[2] * shade])
       } })
       if (p.ring) {
-        const ringCol = hex('#dccbb0')
+        const ringCol = hex('#cfa873')
         plan.push({ frac: 0.018, fill: (i) => {
           const rr = p.ring![0] + Math.pow(rand(i, 51), 0.8) * (p.ring![1] - p.ring![0]), a = rand(i, 52) * Math.PI * 2
           set(i, p.r, p.angle0 ?? rand(0, p.r) * Math.PI * 2, speedAt(p.r), 0.55 + 0.3 * rand(i, 53), Math.cos(a) * rr, gauss(i, 54) * 0.04, Math.sin(a) * rr * 0.92, ringCol)
         } })
       }
     }
-    const beltCol = hex('#b0acc0')
+    const beltCol = hex('#a096c4')
     plan.push({ frac: 0.15, fill: (i) => {
       const r = 13.6 + Math.pow(rand(i, 55), 1.2) * 2.6
       set(i, r, rand(i, 56) * Math.PI * 2, speedAt(r), 0.4, 0, gauss(i, 57) * 0.5, 0, beltCol)
     } })
-    const kuiperCol = hex('#8ea2dc')
+    const kuiperCol = hex('#8c9ade')
     plan.push({ frac: 0.11, fill: (i) => {
       const r = 33 + Math.pow(rand(i, 58), 1.1) * 4.5
       set(i, r, rand(i, 59) * Math.PI * 2, speedAt(r), 0.3, 0, gauss(i, 60) * 1.2, 0, kuiperCol)
     } })
-    const hazeCol = hex('#9fb0ff')
+    const hazeCol = hex('#a99ee8')
     plan.push({ frac: 1, fill: (i) => {
       const r = 3 + Math.pow(rand(i, 61), 0.8) * 32
-      set(i, r, rand(i, 62) * Math.PI * 2, speedAt(r) * 0.6, 0.1, 0, gauss(i, 63) * 0.3, 0, hazeCol)
+      set(i, r, rand(i, 62) * Math.PI * 2, speedAt(r) * 0.6, 0.14, 0, gauss(i, 63) * 0.3, 0, hazeCol)
     } })
     let i = 0
     for (const slot of plan) {
@@ -151,7 +151,7 @@ export function buildFormations(N: number): Formations {
 
   /* ------------------------------------------------------------ earth */
   {
-    const land = hex('#e3ecff'), landWarm = hex('#f6e6c8'), ocean = hex('#3b62b8'), beaconC = hex('#ffb45a')
+    const land = hex('#3fa784'), landWarm = hex('#dba254'), ocean = hex('#74a8ea'), beaconC = hex('#e9542c')
     const toXYZ = (lat: number, lon: number) => {
       const la = (lat * Math.PI) / 180, lo = (lon * Math.PI) / 180
       return [Math.cos(la) * Math.sin(lo), Math.sin(la), Math.cos(la) * Math.cos(lo)] as const
@@ -168,7 +168,7 @@ export function buildFormations(N: number): Formations {
           ok = isLand(lat, lon)
         }
         const [x, y, z] = toXYZ(lat, lon)
-        earth[i4] = x; earth[i4 + 1] = y; earth[i4 + 2] = z; earth[i4 + 3] = ok ? 0.85 + 0.15 * rand(i, 71) : 0.25
+        earth[i4] = x; earth[i4 + 1] = y; earth[i4 + 2] = z; earth[i4 + 3] = ok ? 0.85 + 0.15 * rand(i, 71) : 0.45
         const c = ok ? mixc(land, landWarm, rand(i, 72) * 0.5) : ocean
         earthC[i3] = c[0]; earthC[i3 + 1] = c[1]; earthC[i3 + 2] = c[2]
       } else if (i < nLand + nBeacon) {
@@ -180,7 +180,7 @@ export function buildFormations(N: number): Formations {
         const lat = (Math.asin(rand(i, 75) * 2 - 1) * 180) / Math.PI, lon = rand(i, 76) * 360 - 180
         const [x, y, z] = toXYZ(lat, lon)
         const onLand = isLand(lat, lon)
-        earth[i4] = x; earth[i4 + 1] = y; earth[i4 + 2] = z; earth[i4 + 3] = onLand ? 0.7 : 0.22
+        earth[i4] = x; earth[i4 + 1] = y; earth[i4 + 2] = z; earth[i4 + 3] = onLand ? 0.7 : 0.42
         const c = onLand ? land : ocean
         earthC[i3] = c[0]; earthC[i3 + 1] = c[1]; earthC[i3 + 2] = c[2]
       }
@@ -190,9 +190,9 @@ export function buildFormations(N: number): Formations {
   /* ------------------------------------------------------------ kathmandu */
   {
     const GROUND = -14
-    const stone = hex('#e9e6ff'), stoneDim = hex('#b9b6d6'), gold = hex('#ffd27a'), light = hex('#ffb45a'), lightPale = hex('#ffe0b0'), led = hex('#cfe3ff')
-    const snow = hex('#f4f5ff'), rock = hex('#9ea3c4'), sky = hex('#aab6ff')
-    const flagCols = ['#5aa9ff', '#f4f1ea', '#ff6b6b', '#5ed49a', '#ffd166'].map(hex)
+    const stone = hex('#7f76c8'), stoneDim = hex('#b4acdc'), gold = hex('#e29a2c'), light = hex('#ea7a4c'), lightPale = hex('#f2b06c'), led = hex('#7fa8e8')
+    const snow = hex('#f08c94'), rock = hex('#a79cd8'), sky = hex('#b6abea')
+    const flagCols = ['#4f90e4', '#c8c0d8', '#e85c5c', '#3fae7e', '#ecb82e'].map(hex)
     const set = (i: number, x: number, y: number, z: number, a: number, c: [number, number, number]) => {
       kath[i * 4] = x; kath[i * 4 + 1] = y; kath[i * 4 + 2] = z; kath[i * 4 + 3] = a
       kathC[i * 3] = c[0]; kathC[i * 3 + 1] = c[1]; kathC[i * 3 + 2] = c[2]
@@ -303,7 +303,7 @@ export function buildFormations(N: number): Formations {
       const a0 = 0.45 + 0.5 * rand(i, 105)
       set(i, x, GROUND + 0.1 + h, z, a0 * (1 - Math.min(1, (r - 18) / 80) * 0.5), c)
     } })
-    // mountains: a far snow ridge and a nearer dark one
+    // mountains: a far ridge with dawn on its snow, and a nearer one in shade
     const ridge = (x: number, s: number) => 10 + 7 * Math.sin(x * 0.075 + s) + 4.5 * Math.sin(x * 0.19 + s * 2.1) + 2 * Math.sin(x * 0.46 + s * 3.7) + 1.2 * Math.sin(x * 1.1 + s)
     plan.push({ frac: 0.13, fill: (i) => {
       const far = rand(i, 106) < 0.62

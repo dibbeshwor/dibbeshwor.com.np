@@ -1,5 +1,8 @@
 /**
  * GLSL for the cosmos. Kept as plain strings so Vite needs no loader.
+ *
+ * The sky is pastel paper, so nothing here glows: stars are dots of pigment laid
+ * over a wash of colour, and where they crowd together the pigment gets richer.
  */
 
 export const noise = /* glsl */ `
@@ -47,7 +50,7 @@ export const particlesVert = /* glsl */ `
   uniform mat3  uTilt;
   uniform float uYaw;        // earth's spin
   uniform float uSolarScale, uEScale, uKScale;
-  uniform vec3  uCool, uWarm;
+  uniform vec3  uCool, uWarm, uInk;
 
   attribute vec3  aGalaxy, aSeed;
   attribute float aSize, aKind;
@@ -67,7 +70,7 @@ export const particlesVert = /* glsl */ `
   float gSize = 1.0;     // per-formation point size multiplier
   float gFar = 260.0;    // where depth fades a point out
 
-  vec3 kindColor() { return aKind < 0.5 ? uCool : (aKind < 1.5 ? uWarm : vec3(1.0)); }
+  vec3 kindColor() { return aKind < 0.5 ? uCool : (aKind < 1.5 ? uWarm : uInk); }
 
   void form(int k, float t, float z, out vec3 p, out vec3 c, out float a) {
     if (k == 0) {
@@ -155,12 +158,14 @@ export const particlesVert = /* glsl */ `
     gl_Position = clip;
 
     float depth = max(-mv.z, 1.0);
-    float size = aSize * gSize * uScale * uPixelRatio * (120.0 / depth);
+    float size = aSize * gSize * uScale * uPixelRatio * (142.0 / depth);
     size *= 1.0 + warp * 2.5;
     gl_PointSize = clamp(size, 1.0, 64.0);
 
-    // things that fly past the camera fade out rather than smear
-    vAlpha = a * (1.0 - warp * 0.7) * smoothstep(gFar, 40.0, depth) * smoothstep(2.0, 14.0, depth);
+    // things that fly past the camera fade out rather than smear,
+    // and a dot that swells close to the lens thins out like wet paint
+    float thin = 1.0 - 0.6 * smoothstep(12.0, 56.0, size / uPixelRatio);
+    vAlpha = a * thin * (1.0 - warp * 0.7) * smoothstep(gFar, 40.0, depth) * smoothstep(2.0, 14.0, depth);
     vColor = c;
     vKind = aKind;
     vSeed = aSeed.z;
@@ -180,17 +185,18 @@ export const particlesFrag = /* glsl */ `
     float d = length(uv);
     if (d > 0.5) discard;
     float core = smoothstep(0.5, 0.0, d);
-    float glow = pow(core, 2.4);
-    float tw = 0.74 + 0.26 * sin(uTime * (1.2 + vSeed * 2.6) + vSeed * 40.0);
+    // a dab of pigment: a soft-edged dot, densest in the middle
+    float dab = pow(core, 1.25);
+    float tw = 0.78 + 0.22 * sin(uTime * (1.2 + vSeed * 2.6) + vSeed * 40.0);
     vec3 col = vColor;
-    float a = glow * tw * vAlpha;
+    float a = dab * tw * vAlpha;
     if (vKind > 1.5) {
       float sx = pow(max(0.0, 1.0 - abs(uv.x) * 2.4), 3.0) * max(0.0, 1.0 - abs(uv.y) * 16.0);
       float sy = pow(max(0.0, 1.0 - abs(uv.y) * 2.4), 3.0) * max(0.0, 1.0 - abs(uv.x) * 16.0);
-      a += (sx + sy) * 0.55 * vAlpha * tw;
-      a += pow(core, 10.0) * 0.9 * vAlpha;
+      a += (sx + sy) * 0.6 * vAlpha * tw;
+      a += pow(core, 8.0) * 0.5 * vAlpha;
     }
-    gl_FragColor = vec4(col, a);
+    gl_FragColor = vec4(col, min(a, 1.0));
   }
 `
 
@@ -213,14 +219,15 @@ export const starsFrag = /* glsl */ `
   precision highp float;
   uniform float uTime;
   uniform float uDim;
+  uniform vec3  uCool, uWarm;
   varying float vSeed;
   void main() {
     float d = length(gl_PointCoord - 0.5);
     if (d > 0.5) discard;
-    float a = pow(smoothstep(0.5, 0.0, d), 3.0);
+    float a = pow(smoothstep(0.5, 0.0, d), 1.6);
     float tw = 0.55 + 0.45 * sin(uTime * (0.6 + vSeed * 2.0) + vSeed * 90.0);
-    vec3 col = mix(vec3(0.75, 0.8, 1.0), vec3(1.0, 0.9, 0.8), step(0.7, vSeed));
-    gl_FragColor = vec4(col, a * tw * 0.8 * uDim);
+    vec3 col = mix(uCool, uWarm, step(0.7, vSeed));
+    gl_FragColor = vec4(col, a * tw * 0.6 * uDim);
   }
 `
 
@@ -237,10 +244,11 @@ export const nebulaFrag = /* glsl */ `
   precision highp float;
   uniform float uTime;
   uniform float uAspect;
+  uniform vec3  uPaper;
   uniform vec3  uColA, uColB, uColC;
   uniform vec2  uShift;
   uniform float uDim;
-  uniform float uHorizon;   // 0 deep space → 1 a dusk sky with a bright horizon
+  uniform float uHorizon;   // 0 open space → 1 a dawn sky with a warm horizon
   varying vec2 vUv;
   ${noise}
   void main() {
@@ -250,22 +258,26 @@ export const nebulaFrag = /* glsl */ `
     float warp = fbm(q * 0.7 + vec3(0.0, 0.0, t * 0.5));
     float n1 = fbm(q + vec3(warp * 1.1, warp * 0.6, 0.0));
     float n2 = fbm(q * 1.8 + vec3(3.1, 1.2, -t * 0.7) + warp * 0.5);
-    float lobeA = exp(-length(p - vec2(0.62, 0.32)) * 1.7);
-    float lobeB = exp(-length(p - vec2(-0.66, -0.42)) * 2.1);
-    float lobeC = exp(-length(p - vec2(0.15, -0.55)) * 2.4);
+    float lobeA = exp(-length(p - vec2(0.62, 0.32)) * 1.25);
+    float lobeB = exp(-length(p - vec2(-0.66, -0.42)) * 1.5);
+    float lobeC = exp(-length(p - vec2(0.15, -0.55)) * 1.7);
     float fil = pow(1.0 - abs(n1 * 2.0 - 1.0), 7.0);
     float fil2 = pow(1.0 - abs(n2 * 2.0 - 1.0), 5.0);
-    vec3 col =
-      uColA * (pow(n1, 2.4) * 2.2 + fil * 0.35) * lobeA +
-      uColB * (pow(n2, 2.6) * 1.8 + fil2 * 0.3) * lobeB +
-      uColC * pow(n1 * n2, 1.4) * lobeC * 2.0;
-    col += vec3(0.016, 0.02, 0.04) * n1 * (0.5 + 0.5 * warp);
-    col *= 0.78 * (1.0 - smoothstep(0.4, 1.2, length(p)));
-    // dusk: a band of light along the horizon, haze above it
-    float hz = exp(-abs(vUv.y - 0.36) * 7.0) * (0.6 + 0.4 * n1);
-    vec3 dusk = uColB * hz * 0.9 + uColA * smoothstep(0.3, 0.9, vUv.y) * 0.35 + uColC * exp(-abs(vUv.y - 0.3) * 14.0) * 0.5;
-    col = mix(col, dusk, uHorizon);
-    gl_FragColor = vec4(col * uDim, 1.0);
+    // three washes of pastel over the paper, each pooling where its lobe sits
+    float wa = clamp((pow(n1, 1.7) * 2.6 + fil * 0.3) * lobeA, 0.0, 1.0);
+    float wb = clamp((pow(n2, 1.9) * 2.4 + fil2 * 0.25) * lobeB, 0.0, 1.0);
+    float wc = clamp(pow(n1 * n2, 1.1) * lobeC * 3.4, 0.0, 1.0);
+    vec3 col = uPaper;
+    col = mix(col, uColA, wa * uDim);
+    col = mix(col, uColB, wb * uDim);
+    col = mix(col, uColC, wc * uDim);
+    // dawn: lilac overhead, a band of peach along the horizon, a thread of butter where the sun will be
+    float hz = clamp(exp(-abs(vUv.y - 0.36) * 6.0) * (0.7 + 0.5 * n1), 0.0, 1.0);
+    vec3 dawn = mix(uPaper, uColA, smoothstep(0.3, 1.0, vUv.y) * (0.55 + 0.45 * n2));
+    dawn = mix(dawn, uColB, hz * 0.95);
+    dawn = mix(dawn, uColC, exp(-abs(vUv.y - 0.31) * 13.0) * 0.85);
+    col = mix(col, mix(uPaper, dawn, uDim), uHorizon);
+    gl_FragColor = vec4(col, 1.0);
   }
 `
 
@@ -289,7 +301,7 @@ export const meteorFrag = /* glsl */ `
     float width = 1.0 - smoothstep(0.0, 0.5, abs(vUv.y - 0.5)) ;
     width = pow(width, 1.0 + (1.0 - head) * 3.0);
     float fade = sin(uLife * 3.14159);
-    float a = tail * width * fade;
-    gl_FragColor = vec4(mix(uColor, vec3(1.0), pow(head, 6.0)), a);
+    float a = tail * width * fade * 0.85;
+    gl_FragColor = vec4(uColor, a);
   }
 `

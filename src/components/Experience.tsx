@@ -12,13 +12,13 @@ function OrbitArt() {
     <svg className="orbit-art" viewBox="0 0 340 340" aria-hidden="true">
       <defs>
         <radialGradient id="sun" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stopColor="#fff3e2" />
-          <stop offset="0.35" stopColor="#ffb070" />
-          <stop offset="1" stopColor="#ffb070" stopOpacity="0" />
+          <stop offset="0" stopColor="#ffc85e" />
+          <stop offset="0.4" stopColor="#f28d62" />
+          <stop offset="1" stopColor="#f28d62" stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="170" cy="170" r="26" fill="url(#sun)" className="sun" />
-      <circle cx="170" cy="170" r="5" fill="#fff6ea" />
+      <circle cx="170" cy="170" r="5" fill="#ffe2a6" />
       {orbits.map(({ r, dur, delay }, i) => (
         <g key={r} className="orb" style={{ '--dur': `${dur}s`, '--delay': `${delay}s` } as React.CSSProperties}>
           <ellipse cx="170" cy="170" rx={r} ry={r * 0.62} className="path" />

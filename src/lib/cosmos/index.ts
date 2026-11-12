@@ -4,13 +4,16 @@
  * One buffer of stars, four stops: the galaxy, the solar system, earth, and
  * Kathmandu. `progress.f` says where we are; fractions dive from one stop into
  * the next, through a pivot (the arm we fly into, the third planet, Nepal).
- * Around the stars: a nebula painted with noise that turns into a dusk sky by
- * the end, a distant starfield, constellation lines over the galaxy, and the
- * occasional meteor. Everything is procedural; nothing is loaded.
+ * Around the stars: washes of pastel painted with noise that turn into a dawn
+ * sky by the end, a distant starfield, constellation lines over the galaxy, and
+ * the occasional meteor. Everything is procedural; nothing is loaded.
+ *
+ * The page is light, so the scene is drawn like pigment on paper: ordinary
+ * alpha blending, colour that deepens where the stars crowd, no glow.
  */
 import {
-  AdditiveBlending, BufferAttribute, BufferGeometry, Color, LineBasicMaterial, LineSegments,
-  LinearFilter, Matrix3, Mesh, MeshBasicMaterial, NormalBlending, PerspectiveCamera, PlaneGeometry,
+  BufferAttribute, BufferGeometry, Color, LineBasicMaterial, LineSegments, LinearFilter,
+  LinearSRGBColorSpace, Matrix3, Mesh, MeshBasicMaterial, NormalBlending, PerspectiveCamera, PlaneGeometry,
   Points, Scene, ShaderMaterial, Sphere, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer,
 } from 'three'
 import * as S from './shaders'
@@ -24,13 +27,19 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 const smooth = (x: number) => x * x * (3 - 2 * x)
 const damp = (dt: number, k: number) => 1 - Math.exp(-dt * k)
 
-/* palette per stop: particle cool/warm, nebula A/B/C, nebula level, horizon */
+const PAPER = '#fbf7f1'
+const INK = '#473a8c'
+
+/** The point shaders write straight to the canvas, so their colours stay as written. */
+const pigment = (hex: string) => new Color().setStyle(hex, LinearSRGBColorSpace)
+
+/* palette per stop: particle cool/warm, wash A/B/C, wash strength, horizon */
 const PALETTES = [
-  { cool: '#c4d0ff', warm: '#ffb070', a: '#4b3cc8', b: '#c25f2a', c: '#176a78', dim: 1.0, horizon: 0 },
-  { cool: '#d6dcff', warm: '#ffc27a', a: '#2e2c86', b: '#8a4a2c', c: '#0f4a5a', dim: 0.75, horizon: 0 },
-  { cool: '#cfe6ff', warm: '#ffb070', a: '#16245e', b: '#24468a', c: '#0c3a4a', dim: 0.5, horizon: 0 },
-  { cool: '#e2e6ff', warm: '#ffb45a', a: '#1b1a4e', b: '#d2793a', c: '#8a3f52', dim: 0.85, horizon: 1 },
-]
+  { cool: '#8478e6', warm: '#f28d72', a: '#cdbdf7', b: '#ffcdb0', c: '#bfe8d6', dim: 1.0, horizon: 0 },
+  { cool: '#8f86e0', warm: '#f2a068', a: '#c4dcf8', b: '#ffe3a0', c: '#f7cbde', dim: 0.8, horizon: 0 },
+  { cool: '#7fa6ea', warm: '#f28d72', a: '#c9e0f6', b: '#c8ead8', c: '#dcd2f5', dim: 0.6, horizon: 0 },
+  { cool: '#9a8fe0', warm: '#f2946a', a: '#cbd0f7', b: '#ffc9ab', c: '#ffe7a3', dim: 0.95, horizon: 1 },
+].map((p) => ({ ...p, cool: pigment(p.cool), warm: pigment(p.warm), a: new Color(p.a), b: new Color(p.b), c: new Color(p.c) }))
 
 const TILT = new Matrix3().set(
   1, 0, 0,
@@ -46,7 +55,7 @@ const TILT = new Matrix3().set(
 export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: boolean }) {
   const reduce = opts.reduceMotion
   const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' })
-  renderer.setClearColor(new Color('#06070b'), 1)
+  renderer.setClearColor(new Color(PAPER), 1)
   const scene = new Scene()
   const camera = new PerspectiveCamera(45, 1, 0.1, 1200)
   camera.position.set(0, 0, 70)
@@ -91,11 +100,11 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     uOffG: { value: new Vector3() }, uOffS: { value: new Vector3() }, uOffE: { value: new Vector3() }, uOffK: { value: new Vector3() },
     uPivot0: { value: new Vector3() }, uPivot1: { value: new Vector3() }, uPivot2: { value: new Vector3() },
     uTilt: { value: TILT }, uYaw: { value: 0 }, uSolarScale: { value: 0.62 }, uEScale: { value: 1 }, uKScale: { value: 1 },
-    uCool: { value: new Color(PALETTES[0].cool) }, uWarm: { value: new Color(PALETTES[0].warm) },
+    uCool: { value: new Color(PALETTES[0].cool) }, uWarm: { value: new Color(PALETTES[0].warm) }, uInk: { value: pigment(INK) },
   }
   const particles = new Points(geo, new ShaderMaterial({
     vertexShader: S.particlesVert, fragmentShader: S.particlesFrag, uniforms: pU,
-    transparent: true, depthWrite: false, depthTest: false, blending: AdditiveBlending,
+    transparent: true, depthWrite: false, depthTest: false, blending: NormalBlending,
   }))
   particles.frustumCulled = false
   particles.renderOrder = 2
@@ -116,10 +125,13 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     sGeo.setAttribute('aSize', new BufferAttribute(sz, 1))
     sGeo.setAttribute('aSeed', new BufferAttribute(sd, 1))
   }
-  const sU = { uTime: { value: 0 }, uPixelRatio: { value: 1 }, uScale: { value: 1 }, uDim: { value: 1 } }
+  const sU = {
+    uTime: { value: 0 }, uPixelRatio: { value: 1 }, uScale: { value: 1 }, uDim: { value: 1 },
+    uCool: { value: pigment('#a79ee8') }, uWarm: { value: pigment('#f2a48c') },
+  }
   const stars = new Points(sGeo, new ShaderMaterial({
     vertexShader: S.starsVert, fragmentShader: S.starsFrag, uniforms: sU,
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
+    transparent: true, depthWrite: false, blending: NormalBlending,
   }))
   stars.frustumCulled = false
   stars.renderOrder = 1
@@ -128,6 +140,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   /* ------------------------------------------------------------------ nebula (a third of the resolution) */
   const nU = {
     uTime: { value: 0 }, uAspect: { value: 1 }, uShift: { value: new Vector2() }, uDim: { value: 1 }, uHorizon: { value: 0 },
+    uPaper: { value: new Color(PAPER) },
     uColA: { value: new Color(PALETTES[0].a) }, uColB: { value: new Color(PALETTES[0].b) }, uColC: { value: new Color(PALETTES[0].c) },
   }
   const nebula = new Mesh(new PlaneGeometry(2, 2), new ShaderMaterial({
@@ -168,7 +181,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const cGeo = new BufferGeometry()
   const cPos = new Float32Array(edges.length * 6)
   cGeo.setAttribute('position', new BufferAttribute(cPos, 3))
-  const cMat = new LineBasicMaterial({ color: new Color('#c4d0ff'), transparent: true, opacity: 0, depthWrite: false, blending: AdditiveBlending })
+  const cMat = new LineBasicMaterial({ color: new Color('#6f62d6'), transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: NormalBlending })
   const constellation = new LineSegments(cGeo, cMat)
   constellation.frustumCulled = false
   constellation.renderOrder = 2
@@ -191,8 +204,8 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   for (let i = 0; i < 3; i++) {
     const mat = new ShaderMaterial({
       vertexShader: S.meteorVert, fragmentShader: S.meteorFrag,
-      uniforms: { uLife: { value: 0 }, uColor: { value: new Color(i === 1 ? '#ffb070' : '#dfe6ff') } },
-      transparent: true, depthWrite: false, blending: AdditiveBlending,
+      uniforms: { uLife: { value: 0 }, uColor: { value: pigment(i === 1 ? '#ef7f5c' : '#7b6fe0') } },
+      transparent: true, depthWrite: false, blending: NormalBlending,
     })
     const mesh = new Mesh(meteorGeo, mat)
     mesh.visible = false
@@ -253,7 +266,6 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const camBase = new Vector3(0, 0, 70), camTarget = new Vector3(), camNow = new Vector3(0, 0, 70)
   const look = new Vector3(), lookNow = new Vector3(4, 0, 0)
   const cur = { cool: new Color(PALETTES[0].cool), warm: new Color(PALETTES[0].warm), a: new Color(PALETTES[0].a), b: new Color(PALETTES[0].b), c: new Color(PALETTES[0].c) }
-  const want = { cool: new Color(), warm: new Color(), a: new Color(), b: new Color(), c: new Color() }
   let nebDim = 1, horizon = 0
   let warp = reduce ? 0 : 1
   let raf = 0
@@ -294,9 +306,8 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
 
     // palette drifts toward the stop we are nearest
     const pal = PALETTES[level]
-    want.cool.set(pal.cool); want.warm.set(pal.warm); want.a.set(pal.a); want.b.set(pal.b); want.c.set(pal.c)
     const ck = damp(dt, 2.2)
-    cur.cool.lerp(want.cool, ck); cur.warm.lerp(want.warm, ck); cur.a.lerp(want.a, ck); cur.b.lerp(want.b, ck); cur.c.lerp(want.c, ck)
+    cur.cool.lerp(pal.cool, ck); cur.warm.lerp(pal.warm, ck); cur.a.lerp(pal.a, ck); cur.b.lerp(pal.b, ck); cur.c.lerp(pal.c, ck)
     nebDim = lerp(nebDim, pal.dim, ck); horizon = lerp(horizon, pal.horizon, ck)
     pU.uCool.value.copy(cur.cool); pU.uWarm.value.copy(cur.warm)
     nU.uColA.value.copy(cur.a); nU.uColB.value.copy(cur.b); nU.uColC.value.copy(cur.c)
@@ -361,7 +372,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     }
 
     // constellation over the galaxy only
-    const cOp = (1 - clamp01(f * 2)) * (1 - warp) * (1 - z * 0.6) * 0.32
+    const cOp = (1 - clamp01(f * 2)) * (1 - warp) * (1 - z * 0.6) * 0.42
     cMat.opacity = cOp
     constellation.visible = cOp > 0.005
     if (constellation.visible) {
