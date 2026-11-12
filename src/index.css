@@ -65,8 +65,10 @@
 
   /* ---------- the sky ---------- */
   #field {
-    position: fixed; inset: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
+    /* the large viewport: a phone's address bar coming and going never resizes the canvas */
+    height: 100lvh;
     display: block;
     pointer-events: none;
     opacity: 1;
@@ -83,11 +85,15 @@
   }
   body.no-gl .nebula { opacity: 1; }
   body.no-gl #field { display: none; }
+  body.no-gl .grain { display: block; }
+  /* the sky draws its own grain (paintFrag); this layer stands in only when there's no WebGL.
+     No blend mode: a multiply layer over a live canvas makes Safari re-blend the page every frame. */
   .grain {
+    display: none;
     position: fixed; inset: -50%; z-index: 30; pointer-events: none;
     width: 200%; height: 200%;
-    opacity: 0.1; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.13 0 0 0 0 0.21 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.14 0 0 0 0 0.12 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     animation: grain 1.4s steps(6) infinite;
   }
   @keyframes grain {
@@ -197,11 +203,9 @@
   .btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 13px 20px; border-radius: 999px;
-    border: 1px solid var(--line-2); background: rgba(255,255,255,0.6);
+    border: 1px solid var(--line-2); background: rgba(255,255,255,0.74);
     font-weight: 500; font-size: 15px; text-decoration: none; cursor: pointer;
     transition: transform 160ms var(--ease-out), background-color 160ms ease, border-color 160ms ease, box-shadow 220ms ease;
-    will-change: transform;
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   }
   .btn:active { transform: scale(0.97); }
   @media (hover: hover) and (pointer: fine) {
@@ -213,7 +217,7 @@
   .btn .label > span { grid-area: 1 / 1; transition: opacity 180ms ease, filter 180ms ease, transform 180ms var(--ease-out); }
   .btn .label > span.alt { opacity: 0; filter: blur(4px); transform: translateY(4px); }
   .btn.is-done .label > span.base { opacity: 0; filter: blur(4px); transform: translateY(-4px); }
-  .btn.is-done .label > span.alt { opacity: 1; filter: blur(0); transform: none; }
+  .btn.is-done .label > span.alt { opacity: 1; filter: none; transform: none; }
   .btn svg { width: 16px; height: 16px; flex: none; }
 
   /* ---------- hero ---------- */
@@ -274,7 +278,8 @@
   /* hero entrance (one-time) */
   .rise { opacity: 0; transform: translateY(16px); filter: blur(8px);
           animation: rise 1100ms var(--ease-out) forwards; animation-delay: var(--d, 0ms); }
-  @keyframes rise { to { opacity: 1; transform: none; filter: blur(0); } }
+  /* ends on `none`, not blur(0): a leftover filter keeps every word on its own GPU layer */
+  @keyframes rise { to { opacity: 1; transform: none; filter: none; } }
 
   /* ---------- chapters (pinned) ---------- */
   .chapters { position: relative; z-index: 1; height: 460svh; }
@@ -284,7 +289,8 @@
     position: absolute; left: var(--gutter); right: var(--gutter); bottom: 11svh;
     max-width: 600px;
     opacity: 0; transform: translateY(24px); filter: blur(8px);
-    will-change: opacity, transform, filter;
+    visibility: hidden; /* Chapters.tsx shows one while it's on screen */
+    will-change: opacity, transform;
     pointer-events: none;
   }
   .chapter.is-on { pointer-events: auto; }
@@ -319,7 +325,7 @@
   .reveal { opacity: 0; transform: translateY(20px); filter: blur(8px);
             transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out), filter 800ms var(--ease-out);
             transition-delay: calc(var(--i, 0) * 70ms); }
-  .reveal.in { opacity: 1; transform: none; filter: blur(0); }
+  .reveal.in { opacity: 1; transform: none; filter: none; }
 
   /* ---------- work ---------- */
   .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; perspective: 1400px; }
@@ -327,7 +333,9 @@
     --mx: 50%; --my: 50%; --rx: 0deg; --ry: 0deg;
     position: relative; grid-column: span 4;
     padding: 14px 14px 22px; border-radius: 24px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.52));
+    /* no backdrop blur: under a 3D tilt Safari drops it in and out, and every visible card
+       re-blurs the live sky each frame. A denser fill reads the same. */
+    background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,255,255,0.64));
     border: 1px solid var(--line);
     box-shadow: 0 16px 36px -24px rgba(38,48,72,0.35);
     overflow: hidden; isolation: isolate;
@@ -336,7 +344,6 @@
     transform: rotateX(var(--rx)) rotateY(var(--ry));
     transform-style: preserve-3d;
     transition: border-color 200ms ease, box-shadow 400ms ease;
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   }
   .card.reveal { transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out), filter 800ms var(--ease-out), border-color 200ms ease, box-shadow 400ms ease; }
   .card.reveal.in { transition: border-color 200ms ease, box-shadow 400ms ease; }
@@ -397,6 +404,8 @@
   /* every animation is paused until the card is revealed */
   .viz *, .viz { animation-play-state: paused; }
   .card.in .viz, .card.in .viz * { animation-play-state: running; }
+  /* anything that loops rests while it's scrolled away (useReveal) */
+  .is-off, .is-off *, .is-off::before, .is-off::after { animation-play-state: paused !important; }
 
   /* astro */
   .viz-astro .chart rect, .viz-astro .chart path { fill: none; stroke: rgba(36,38,47,0.4); stroke-width: 1; stroke-dasharray: 600; stroke-dashoffset: 600; animation: vdraw 2.4s var(--ease-out) forwards; }
@@ -503,10 +512,9 @@
   .now {
     position: relative;
     border: 1px solid var(--line); border-radius: 22px; padding: 26px;
-    background: linear-gradient(160deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
+    background: linear-gradient(160deg, rgba(255,255,255,0.86), rgba(255,255,255,0.62));
     box-shadow: 0 16px 36px -24px rgba(38,48,72,0.35);
     display: grid; gap: 14px; overflow: hidden;
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   }
   .now::before {
     content: ""; position: absolute; inset: -40%; z-index: 0; pointer-events: none;

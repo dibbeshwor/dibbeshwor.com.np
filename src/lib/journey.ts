@@ -20,18 +20,22 @@ export function startJourney(reduce: boolean) {
   const contact = document.querySelector<HTMLElement>('#contact')
   if (!chapters || !contact) return () => {}
   let ticking = false
+  // layout is read on resize, never on scroll, so a scroll frame doesn't force a layout
+  let vh = 0, top = 0, len = 1, end = 0, kathStart = 0, kathEnd = 0
+  const measure = () => {
+    vh = window.innerHeight
+    top = chapters.offsetTop
+    len = Math.max(1, chapters.offsetHeight - vh)
+    end = top + len
+    const docEnd = document.documentElement.scrollHeight - vh
+    kathStart = contact.offsetTop - vh * 1.05
+    kathEnd = Math.max(kathStart + vh * 0.8, docEnd)
+  }
+  const n = 4
 
   const update = () => {
     ticking = false
-    const vh = window.innerHeight
     const y = window.scrollY
-    const top = chapters.offsetTop
-    const len = chapters.offsetHeight - vh
-    const n = 4
-    const end = top + len
-    const docEnd = document.documentElement.scrollHeight - vh
-    const kathStart = contact.offsetTop - vh * 1.05
-    const kathEnd = Math.max(kathStart + vh * 0.8, docEnd)
 
     let f = 0, z = 0, lock = 0
     if (y < top) {
@@ -54,17 +58,25 @@ export function startJourney(reduce: boolean) {
       f = Math.round(f); z = 0.5; lock = lock > 0.5 || f >= 3 ? 1 : 0
     }
     progress.f = f; progress.z = z; progress.lock = lock
-    document.body.classList.toggle('is-content', y > end + vh * 0.2 && y < kathStart)
+    const content = y > end + vh * 0.2 && y < kathStart
+    if (content !== isContent) { isContent = content; document.body.classList.toggle('is-content', content) }
   }
+  let isContent = false
   const onScroll = () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update) }
   }
+  const onResize = () => { measure(); onScroll() }
+  // fonts, images and the cards revealing all move the sections after load
+  const ro = new ResizeObserver(onResize)
+  ro.observe(document.body)
+  measure()
   update()
   window.addEventListener('scroll', onScroll, { passive: true })
-  window.addEventListener('resize', onScroll)
+  window.addEventListener('resize', onResize)
   return () => {
+    ro.disconnect()
     window.removeEventListener('scroll', onScroll)
-    window.removeEventListener('resize', onScroll)
+    window.removeEventListener('resize', onResize)
     document.body.classList.remove('is-content')
     progress.f = 0; progress.z = 0; progress.lock = 0
   }

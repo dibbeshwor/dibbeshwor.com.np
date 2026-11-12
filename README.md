@@ -16,7 +16,8 @@ Built with React 19, TanStack Router, Three.js, Tailwind CSS v4 and Vite, deploy
 | `src/lib/cosmos/formations.ts` | Builds the per-star attributes for galaxy, solar system, earth and Kathmandu. |
 | `src/lib/cosmos/shaders.ts` | All GLSL. The dive between stops and the pointer repulsion run in the particle vertex shader. |
 | `src/lib/cosmos/land.ts` | The land bitmap. Regenerate with `node scripts/make-land.mjs <ne_110m_land.geojson>`. |
-| `src/components/Cosmos.tsx` | Mounts the scene, plus the grain and vignette overlays. |
+| `src/components/Cosmos.tsx` | Mounts the scene (its own chunk, preloaded from the HTML), plus the vignette and the no-WebGL grain. |
+| `src/lib/impasto.ts` | The oil-paint tile the sky's washes are laid on with, built in a worker at startup. |
 | `src/components/Cursor.tsx` | The custom cursor (fine pointers only). |
 | `src/components/Chapters.tsx` | The pinned section. Fades chapter text in and out with scroll. |
 | `src/components/*` | One component per section: `Nav`, `Hero`, `Work`, `About`, `Experience`, `Contact`. |
@@ -47,7 +48,10 @@ pnpm deploy     # build, then wrangler deploy
 - Everything animates on `transform`, `opacity` and `filter`; scroll work runs in one `requestAnimationFrame` per scroll event and never re-renders React.
 - `prefers-reduced-motion` is respected: the sky holds still and switches formation without morphing, there is no warp-in, no meteors, no pointer repulsion, reveals become fades, the marquee is static, cards don't tilt and the native cursor is kept.
 - The canvas is `aria-hidden`; all content is plain HTML underneath it. Without WebGL the page falls back to a CSS nebula.
-- The nebula shader renders at a third of the resolution and is composited behind the scene; particle counts and pixel ratio are lower on phones.
+- The nebula shader renders at a third of the resolution and is brought up to full size as paint, with the film grain drawn in the same pass; particle counts and pixel ratio are lower on phones, and big windows render within a pixel budget.
+- three.js loads as its own chunk (preloaded by a small plugin in `vite.config.ts`), so the words paint before it has parsed.
+- Nothing blends or blurs over the live canvas except the nav: no `mix-blend-mode` and no `backdrop-filter` on cards or buttons, which Safari redraws (and flickers) every frame. The canvas is `100lvh` tall so a phone's address bar never resizes it, and any resize is redrawn in the same frame.
+- Looping card and section animations pause while they're scrolled out of view; scroll handlers measure layout on resize, never per scroll.
 - Quality adapts downward: after the stars arrive the scene watches frame times and, if the median is under ~40 fps, lowers pixel ratio and draws fewer stars (formations put their least important points last). A lost WebGL context pauses the loop and rebuilds on restore.
 - Startup phases are marked (`cosmos:build`, `cosmos:init`, `cosmos:frame0`) and show up in the DevTools performance panel.
 

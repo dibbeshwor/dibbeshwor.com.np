@@ -277,6 +277,8 @@ export const nebulaFrag = /* glsl */ `
     dawn = mix(dawn, uColB, hz * 0.95);
     dawn = mix(dawn, uColC, exp(-abs(vUv.y - 0.31) * 13.0) * 0.85);
     col = mix(col, mix(uPaper, dawn, uDim), uHorizon);
+    // stored ready for the screen, so the full-size pass doesn't convert every pixel
+    col = mix(col * 12.92, 1.055 * pow(col, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, col));
     gl_FragColor = vec4(col, 1.0);
   }
 `
@@ -303,20 +305,27 @@ export const paintFrag = /* glsl */ `
   uniform float uReach;     // the furthest a stroke's middle can be, device px
   uniform vec2  uDrift;     // device px; the paint travels with the clouds
   uniform float uPaint;     // 0 a smooth wash · 1 paint
+  uniform float uPx;        // device px per css px, so the grain is the same size everywhere
+  uniform float uGrain;     // which grain; steps a few times a second
 
-  vec3 toSRGB(vec3 c) {
-    return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+  // a hash without sin, steady on every GPU
+  float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
   }
 
   void main() {
     vec4 r = texture2D(uRelief, (gl_FragCoord.xy + uDrift) / uTile);
     vec2 toMiddle = (r.xy * 255.0 - 128.0) / 127.0 * uReach;
-    vec3 c = toSRGB(texture2D(uWash, (gl_FragCoord.xy + toMiddle * 0.85 * uPaint) / uRes).rgb);
+    vec3 c = texture2D(uWash, (gl_FragCoord.xy + toMiddle * 0.85 * uPaint) / uRes).rgb;
     // no two strokes quite the same mix
     c *= 1.0 + (r.a - 0.5) * 0.05 * uPaint;
     // ridges catch the light from the upper left, furrows hold a little shadow
     float shade = (r.b - 0.5) * uPaint;
     c = c * (1.0 + shade * 0.16) + max(shade, 0.0) * 0.025;
+    // film grain, the tooth of the paper
+    c *= 1.0 - 0.075 * hash(floor(gl_FragCoord.xy / uPx) + uGrain * vec2(113.0, 71.0));
     gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
   }
 `

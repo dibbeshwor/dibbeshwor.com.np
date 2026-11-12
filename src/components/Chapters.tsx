@@ -23,13 +23,19 @@ export function Chapters() {
     const n = chapters.length
     let lastOn = -1
     let ticking = false
+    // what each chapter was last given, so a scroll only touches the ones that change
+    const was = els.map(() => '')
+    // measured on resize, not on every scroll
+    let vh = 0, top = 0, len = 1
+    const measure = () => {
+      vh = window.innerHeight
+      top = section.offsetTop
+      len = Math.max(1, section.offsetHeight - vh)
+    }
 
     const update = () => {
       ticking = false
-      const vh = window.innerHeight
       const y = window.scrollY
-      const top = section.offsetTop
-      const len = section.offsetHeight - vh
       const p = y < top ? 0 : y < top + len ? (y - top) / len : 1
       const seg = p * n
       els.forEach((el, i) => {
@@ -40,11 +46,16 @@ export function Chapters() {
           const fadeOut = i === n - 1 ? 1 : 1 - smooth(clamp01((l - 0.6) / 0.2))
           vis = fadeIn * fadeOut
         }
+        const dir = l < 0.5 ? 1 : -1
+        const key = `${vis.toFixed(3)}${dir}`
+        if (key === was[i]) return
+        was[i] = key
+        el.style.visibility = vis > 0 ? 'visible' : 'hidden'
         el.style.opacity = vis.toFixed(3)
         if (!reduce) {
-          const dir = l < 0.5 ? 1 : -1
           el.style.transform = `translateY(${((1 - vis) * 28 * dir).toFixed(1)}px)`
-          el.style.filter = `blur(${((1 - vis) * 10).toFixed(1)}px)`
+          // a settled chapter carries no filter at all, so its text isn't re-rasterised
+          el.style.filter = vis >= 0.999 ? 'none' : `blur(${((1 - vis) * 10).toFixed(1)}px)`
         }
         el.classList.toggle('is-on', vis > 0.5)
       })
@@ -59,12 +70,18 @@ export function Chapters() {
     const onScroll = () => {
       if (!ticking) { ticking = true; requestAnimationFrame(update) }
     }
+    const onResize = () => { measure(); onScroll() }
+    // fonts and images arriving move the section too
+    const ro = new ResizeObserver(onResize)
+    ro.observe(document.body)
+    measure()
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
+    window.addEventListener('resize', onResize)
     return () => {
+      ro.disconnect()
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('resize', onResize)
     }
   }, [reduce])
 

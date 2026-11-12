@@ -30,6 +30,9 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 const smooth = (x: number) => x * x * (3 - 2 * x)
 const damp = (dt: number, k: number) => 1 - Math.exp(-dt * k)
 
+/** device pixels the canvas may fill: full 2x up to about 1280×880, ~1.85x at 1440×900, ~1.4x at 1920×1200 */
+const PIXEL_BUDGET = 4.5e6
+
 const PAPER = '#fbf7f1'
 const INK = '#2b3d63'
 
@@ -164,6 +167,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const bU = {
     uWash: { value: nebTarget.texture }, uRelief: { value: relief },
     uRes: { value: new Vector2(1, 1) }, uTile: { value: TILE }, uReach: { value: REACH }, uDrift: { value: new Vector2() }, uPaint: { value: 0 },
+    uPx: { value: 1 }, uGrain: { value: 0 },
   }
   const blit = new Mesh(new PlaneGeometry(2, 2), new ShaderMaterial({
     vertexShader: S.paintVert, fragmentShader: S.paintFrag, uniforms: bU, depthTest: false, depthWrite: false,
@@ -248,15 +252,24 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     tier++
     if (tier === 1) { dprCap = Math.min(dprCap, 1.25); geo.setDrawRange(0, Math.floor(N * 0.75)) }
     else { dprCap = 1; geo.setDrawRange(0, Math.floor(N * 0.55)); settled = true }
-    layout()
+    layout(true)
   }
 
-  function layout() {
-    DPR = Math.min(window.devicePixelRatio || 1, dprCap)
-    W = window.innerWidth; H = window.innerHeight
+  /**
+   * Sizes everything to the canvas. The canvas is as tall as the large viewport (CSS 100lvh),
+   * so a phone's address bar sliding in and out doesn't resize it: a resize clears the
+   * drawing buffer, which Safari shows as a blank frame. Returns false when nothing changed.
+   */
+  function layout(force = false) {
+    const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight
+    // a pixel budget: a big retina window renders a touch under its full density
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap, Math.max(1, Math.sqrt(PIXEL_BUDGET / (w * h))))
+    if (!force && w === W && h === H && dpr === DPR) return false
+    DPR = dpr; W = w; H = h
     wide = W > 900; narrow = W < 600
     renderer.setPixelRatio(DPR)
     renderer.setSize(W, H, false)
+    bU.uPx.value = DPR
     nebTarget.setSize(Math.max(2, Math.floor((W * DPR) / 3)), Math.max(2, Math.floor((H * DPR) / 3)))
     // strokes keep their size on screen; a little smaller on a phone
     const strokeScale = DPR * Math.max(0.6, Math.min(1, W / 1280))
@@ -292,6 +305,16 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     }
     // the arm we dive into
     pU.uPivot0.value.set(7, 0, 4).applyMatrix3(TILT).add(pU.uOffG.value)
+    return true
+  }
+
+  function draw(washes = true) {
+    if (washes) {
+      renderer.setRenderTarget(nebTarget)
+      renderer.render(nebScene, camera)
+      renderer.setRenderTarget(null)
+    }
+    renderer.render(scene, camera)
   }
 
   /* ------------------------------------------------------------------ frame */
@@ -445,12 +468,9 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
       }
     }
 
-    if (tier < 2 || frameNo % 2 === 0) {
-      renderer.setRenderTarget(nebTarget)
-      renderer.render(nebScene, camera)
-      renderer.setRenderTarget(null)
-    }
-    renderer.render(scene, camera)
+    // the grain steps about four times a second, like film
+    if (!reduce) bU.uGrain.value = Math.floor(elapsed * 4.3) % 7
+    draw(tier < 2 || frameNo % 2 === 0)
     if (frameNo === 1) { performance.mark('cosmos:frame0:end'); performance.measure('cosmos:frame0', 'cosmos:frame0:start', 'cosmos:frame0:end') }
     raf = requestAnimationFrame(frame)
   }
@@ -458,7 +478,12 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   /* ------------------------------------------------------------------ events */
   const onMove = (e: PointerEvent) => { mouse.set((e.clientX / W) * 2 - 1, -((e.clientY / H) * 2 - 1)) }
   const onLeave = () => { mouse.set(-9, -9) }
-  const onResize = () => layout()
+  // paint the new size straight away, before the browser can show the cleared buffer.
+  // The canvas is watched as well as the window: it catches the stylesheet sizing it after
+  // the sky has started, and runs before paint, so the redraw lands in the same frame.
+  const onResize = () => { if (layout() && running) draw() }
+  const sizer = new ResizeObserver(onResize)
+  sizer.observe(canvas)
   const onVisibility = () => {
     running = !document.hidden
     if (running) { last = performance.now(); raf = requestAnimationFrame(frame) }
@@ -468,7 +493,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const onLost = (e: Event) => { e.preventDefault(); running = false; cancelAnimationFrame(raf) }
   const onRestored = () => {
     nebTarget.dispose()
-    layout()
+    layout(true)
     running = !document.hidden
     if (running) { last = performance.now(); raf = requestAnimationFrame(frame) }
   }
@@ -482,12 +507,15 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   layout()
   performance.mark('cosmos:init:end')
   performance.measure('cosmos:init', 'cosmos:build:end', 'cosmos:init:end')
-  raf = requestAnimationFrame(frame)
+  // the first frame now, not on the next tick: a fresh opaque canvas is black until drawn,
+  // and Safari will show it that way for a frame
+  frame()
 
   return function destroy() {
     running = false
     destroyed = true
     cancelAnimationFrame(raf)
+    sizer.disconnect()
     window.removeEventListener('pointermove', onMove)
     window.removeEventListener('pointerleave', onLeave)
     window.removeEventListener('resize', onResize)
