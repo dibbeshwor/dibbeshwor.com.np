@@ -271,13 +271,53 @@ export const nebulaFrag = /* glsl */ `
     col = mix(col, uColA, wa * uDim);
     col = mix(col, uColB, wb * uDim);
     col = mix(col, uColC, wc * uDim);
-    // dawn: lilac overhead, a band of peach along the horizon, a thread of butter where the sun will be
+    // dawn: pale blue overhead, a band of peach along the horizon, a thread of butter where the sun will be
     float hz = clamp(exp(-abs(vUv.y - 0.36) * 6.0) * (0.7 + 0.5 * n1), 0.0, 1.0);
     vec3 dawn = mix(uPaper, uColA, smoothstep(0.3, 1.0, vUv.y) * (0.55 + 0.45 * n2));
     dawn = mix(dawn, uColB, hz * 0.95);
     dawn = mix(dawn, uColC, exp(-abs(vUv.y - 0.31) * 13.0) * 0.85);
     col = mix(col, mix(uPaper, dawn, uDim), uHorizon);
     gl_FragColor = vec4(col, 1.0);
+  }
+`
+
+/* ---------------------------------------------------------------- paint */
+
+/**
+ * The washes, laid on as oil paint. The washes are drawn small and smooth; here, at full
+ * size, every pixel looks up the brush stroke it sits under (see impasto.ts) and takes the
+ * colour from the middle of that stroke, so each stroke reads as one loaded brush. The
+ * ridges of the stroke then catch the light.
+ */
+export const paintVert = /* glsl */ `
+  void main() {
+    gl_Position = vec4(position.xy, 0.99999, 1.0);
+  }
+`
+export const paintFrag = /* glsl */ `
+  precision highp float;
+  uniform sampler2D uWash;
+  uniform sampler2D uRelief;
+  uniform vec2  uRes;       // canvas, device px
+  uniform float uTile;      // one tile of paint, device px
+  uniform float uReach;     // the furthest a stroke's middle can be, device px
+  uniform vec2  uDrift;     // device px; the paint travels with the clouds
+  uniform float uPaint;     // 0 a smooth wash · 1 paint
+
+  vec3 toSRGB(vec3 c) {
+    return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+  }
+
+  void main() {
+    vec4 r = texture2D(uRelief, (gl_FragCoord.xy + uDrift) / uTile);
+    vec2 toMiddle = (r.xy * 255.0 - 128.0) / 127.0 * uReach;
+    vec3 c = toSRGB(texture2D(uWash, (gl_FragCoord.xy + toMiddle * 0.85 * uPaint) / uRes).rgb);
+    // no two strokes quite the same mix
+    c *= 1.0 + (r.a - 0.5) * 0.05 * uPaint;
+    // ridges catch the light from the upper left, furrows hold a little shadow
+    float shade = (r.b - 0.5) * uPaint;
+    c = c * (1.0 + shade * 0.16) + max(shade, 0.0) * 0.025;
+    gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
   }
 `
 

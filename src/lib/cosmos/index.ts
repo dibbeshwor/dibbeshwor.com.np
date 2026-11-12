@@ -9,14 +9,17 @@
  * the occasional meteor. Everything is procedural; nothing is loaded.
  *
  * The page is light, so the scene is drawn like pigment on paper: ordinary
- * alpha blending, colour that deepens where the stars crowd, no glow.
+ * alpha blending, colour that deepens where the stars crowd, no glow. The
+ * washes behind the stars are laid on as oil paint once the paint tile is
+ * ready; the stars stay crisp on top.
  */
 import {
-  BufferAttribute, BufferGeometry, Color, LineBasicMaterial, LineSegments, LinearFilter,
-  LinearSRGBColorSpace, Matrix3, Mesh, MeshBasicMaterial, NormalBlending, PerspectiveCamera, PlaneGeometry,
-  Points, Scene, ShaderMaterial, Sphere, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer,
+  BufferAttribute, BufferGeometry, Color, DataTexture, LineBasicMaterial, LineSegments, LinearFilter,
+  LinearSRGBColorSpace, Matrix3, Mesh, NormalBlending, PerspectiveCamera, PlaneGeometry,
+  Points, RepeatWrapping, RGBAFormat, Scene, ShaderMaterial, Sphere, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer,
 } from 'three'
 import * as S from './shaders'
+import { impasto, REACH, TILE } from '../impasto'
 import { buildFormations, EARTH_ORBIT, GALAXY_R, KATHMANDU, rand } from './formations'
 import { progress } from '../journey'
 
@@ -28,17 +31,17 @@ const smooth = (x: number) => x * x * (3 - 2 * x)
 const damp = (dt: number, k: number) => 1 - Math.exp(-dt * k)
 
 const PAPER = '#fbf7f1'
-const INK = '#473a8c'
+const INK = '#2b3d63'
 
 /** The point shaders write straight to the canvas, so their colours stay as written. */
 const pigment = (hex: string) => new Color().setStyle(hex, LinearSRGBColorSpace)
 
 /* palette per stop: particle cool/warm, wash A/B/C, wash strength, horizon */
 const PALETTES = [
-  { cool: '#8478e6', warm: '#f28d72', a: '#cdbdf7', b: '#ffcdb0', c: '#bfe8d6', dim: 1.0, horizon: 0 },
-  { cool: '#8f86e0', warm: '#f2a068', a: '#c4dcf8', b: '#ffe3a0', c: '#f7cbde', dim: 0.8, horizon: 0 },
-  { cool: '#7fa6ea', warm: '#f28d72', a: '#c9e0f6', b: '#c8ead8', c: '#dcd2f5', dim: 0.6, horizon: 0 },
-  { cool: '#9a8fe0', warm: '#f2946a', a: '#cbd0f7', b: '#ffc9ab', c: '#ffe7a3', dim: 0.95, horizon: 1 },
+  { cool: '#5d86d6', warm: '#f08a6c', a: '#c3dcf6', b: '#ffcdb0', c: '#bfe8d6', dim: 1.0, horizon: 0 },
+  { cool: '#6a8fd4', warm: '#f2a068', a: '#c4dcf8', b: '#ffe3a0', c: '#f7cfd9', dim: 0.8, horizon: 0 },
+  { cool: '#6f9ee6', warm: '#f28d72', a: '#c9e0f6', b: '#c8ead8', c: '#fbe6b0', dim: 0.6, horizon: 0 },
+  { cool: '#7a9cd8', warm: '#f2946a', a: '#c8dcf3', b: '#ffc9ab', c: '#ffe7a3', dim: 0.95, horizon: 1 },
 ].map((p) => ({ ...p, cool: pigment(p.cool), warm: pigment(p.warm), a: new Color(p.a), b: new Color(p.b), c: new Color(p.c) }))
 
 const TILT = new Matrix3().set(
@@ -127,7 +130,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   }
   const sU = {
     uTime: { value: 0 }, uPixelRatio: { value: 1 }, uScale: { value: 1 }, uDim: { value: 1 },
-    uCool: { value: pigment('#a79ee8') }, uWarm: { value: pigment('#f2a48c') },
+    uCool: { value: pigment('#93b0e4') }, uWarm: { value: pigment('#f2a48c') },
   }
   const stars = new Points(sGeo, new ShaderMaterial({
     vertexShader: S.starsVert, fragmentShader: S.starsFrag, uniforms: sU,
@@ -151,13 +154,38 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const nebScene = new Scene()
   nebScene.add(nebula)
   const nebTarget = new WebGLRenderTarget(4, 4, { minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: false, stencilBuffer: false })
-  const blit = new Mesh(new PlaneGeometry(2, 2), new MeshBasicMaterial({ map: nebTarget.texture, depthTest: false, depthWrite: false }))
+
+  /* ------------------------------------------------------------------ paint: the washes, brought up to full size as oil paint */
+  // flat until the tile arrives from the worker
+  const relief = new DataTexture(new Uint8Array(TILE * TILE * 4).fill(128), TILE, TILE, RGBAFormat)
+  relief.wrapS = relief.wrapT = RepeatWrapping
+  relief.magFilter = relief.minFilter = LinearFilter
+  relief.needsUpdate = true
+  const bU = {
+    uWash: { value: nebTarget.texture }, uRelief: { value: relief },
+    uRes: { value: new Vector2(1, 1) }, uTile: { value: TILE }, uReach: { value: REACH }, uDrift: { value: new Vector2() }, uPaint: { value: 0 },
+  }
+  const blit = new Mesh(new PlaneGeometry(2, 2), new ShaderMaterial({
+    vertexShader: S.paintVert, fragmentShader: S.paintFrag, uniforms: bU, depthTest: false, depthWrite: false,
+  }))
   blit.frustumCulled = false
   blit.renderOrder = -1
-  ;(blit.material as MeshBasicMaterial).onBeforeCompile = (sh) => {
-    sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', 'gl_Position = vec4(position.xy, 0.99999, 1.0);')
-  }
   scene.add(blit)
+  let paintReady = false, destroyed = false
+  let worker: Worker | null = null
+  const takeTile = (data: Uint8Array) => {
+    if (destroyed) return
+    ;(relief.image.data as Uint8Array).set(data)
+    relief.needsUpdate = true
+    paintReady = true
+  }
+  try {
+    worker = new Worker(new URL('../impasto.worker.ts', import.meta.url), { type: 'module' })
+    worker.onmessage = (e: MessageEvent<Uint8Array>) => { takeTile(e.data); worker?.terminate(); worker = null }
+    worker.onerror = () => { worker?.terminate(); worker = null; setTimeout(() => takeTile(impasto()), 0) }
+  } catch {
+    setTimeout(() => takeTile(impasto()), 0)
+  }
 
   /* ------------------------------------------------------------------ constellation */
   const edges: [number, number][] = []
@@ -181,7 +209,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   const cGeo = new BufferGeometry()
   const cPos = new Float32Array(edges.length * 6)
   cGeo.setAttribute('position', new BufferAttribute(cPos, 3))
-  const cMat = new LineBasicMaterial({ color: new Color('#6f62d6'), transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: NormalBlending })
+  const cMat = new LineBasicMaterial({ color: new Color('#5a80c4'), transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: NormalBlending })
   const constellation = new LineSegments(cGeo, cMat)
   constellation.frustumCulled = false
   constellation.renderOrder = 2
@@ -204,7 +232,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
   for (let i = 0; i < 3; i++) {
     const mat = new ShaderMaterial({
       vertexShader: S.meteorVert, fragmentShader: S.meteorFrag,
-      uniforms: { uLife: { value: 0 }, uColor: { value: pigment(i === 1 ? '#ef7f5c' : '#7b6fe0') } },
+      uniforms: { uLife: { value: 0 }, uColor: { value: pigment(i === 1 ? '#ef7f5c' : '#5d86d6') } },
       transparent: true, depthWrite: false, blending: NormalBlending,
     })
     const mesh = new Mesh(meteorGeo, mat)
@@ -230,6 +258,11 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     renderer.setPixelRatio(DPR)
     renderer.setSize(W, H, false)
     nebTarget.setSize(Math.max(2, Math.floor((W * DPR) / 3)), Math.max(2, Math.floor((H * DPR) / 3)))
+    // strokes keep their size on screen; a little smaller on a phone
+    const strokeScale = DPR * Math.max(0.6, Math.min(1, W / 1280))
+    bU.uRes.value.set(W * DPR, H * DPR)
+    bU.uTile.value = TILE * strokeScale
+    bU.uReach.value = REACH * strokeScale
     camera.aspect = W / H
     camera.updateProjectionMatrix()
     const aspect = W / H
@@ -312,6 +345,9 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     pU.uCool.value.copy(cur.cool); pU.uWarm.value.copy(cur.warm)
     nU.uColA.value.copy(cur.a); nU.uColB.value.copy(cur.b); nU.uColC.value.copy(cur.c)
     nU.uShift.value.set(f * 0.35 + heroScroll * 0.2, -f * 0.18)
+    // the clouds slide by -shift / 1.5 (see nebulaFrag); the paint slides with them
+    bU.uDrift.value.set((nU.uShift.value.x / 1.5) * H * DPR, (nU.uShift.value.y / 1.5) * H * DPR)
+    if (paintReady && bU.uPaint.value < 1) bU.uPaint.value = reduce ? 1 : Math.min(1, bU.uPaint.value + dt / 1.2)
     nU.uDim.value = nebDim
     nU.uHorizon.value = horizon
     sU.uDim.value = 1 - horizon * 0.6
@@ -450,6 +486,7 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
 
   return function destroy() {
     running = false
+    destroyed = true
     cancelAnimationFrame(raf)
     window.removeEventListener('pointermove', onMove)
     window.removeEventListener('pointerleave', onLeave)
@@ -465,6 +502,8 @@ export function createCosmos(canvas: HTMLCanvasElement, opts: { reduceMotion: bo
     })
     nebula.geometry.dispose(); nebula.material.dispose()
     nebTarget.dispose()
+    relief.dispose()
+    worker?.terminate()
     renderer.dispose()
   }
 }

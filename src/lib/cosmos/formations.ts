@@ -84,7 +84,7 @@ export function buildFormations(N: number): Formations {
       { r: 19, body: 1.35, c: '#e09a6e', n: 0.02 },
       { r: 23.5, body: 1.15, c: '#e2b45e', n: 0.015, ring: [1.7, 2.7] as [number, number] },
       { r: 27, body: 1.2, c: '#5fc4c4', n: 0.016 },
-      { r: 30.5, body: 1.2, c: '#6478e6', n: 0.016 },
+      { r: 30.5, body: 1.2, c: '#4f80d6', n: 0.016 },
     ]
     const speedAt = (r: number) => EARTH_ORBIT.speed * Math.pow(EARTH_ORBIT.r / r, 1.5)
     // slots: [start, end) fractions of N
@@ -105,7 +105,7 @@ export function buildFormations(N: number): Formations {
       const d = Math.hypot(x, y, z) / 2.4
       set(i, 0, 0, 0, 1, x, y, z, mixc(sunCore, sunEdge, d))
     } })
-    const dustCol = hex('#9288e2')
+    const dustCol = hex('#8fa8dc')
     plan.push({ frac: 0.17, fill: (i, j, count) => {
       const p = planets[j % planets.length]
       const r = p.r + gauss(i, 43) * 0.12
@@ -127,7 +127,7 @@ export function buildFormations(N: number): Formations {
         } })
       }
     }
-    const beltCol = hex('#a096c4')
+    const beltCol = hex('#aaa294')
     plan.push({ frac: 0.15, fill: (i) => {
       const r = 13.6 + Math.pow(rand(i, 55), 1.2) * 2.6
       set(i, r, rand(i, 56) * Math.PI * 2, speedAt(r), 0.4, 0, gauss(i, 57) * 0.5, 0, beltCol)
@@ -137,7 +137,7 @@ export function buildFormations(N: number): Formations {
       const r = 33 + Math.pow(rand(i, 58), 1.1) * 4.5
       set(i, r, rand(i, 59) * Math.PI * 2, speedAt(r), 0.3, 0, gauss(i, 60) * 1.2, 0, kuiperCol)
     } })
-    const hazeCol = hex('#a99ee8')
+    const hazeCol = hex('#a3bce4')
     plan.push({ frac: 1, fill: (i) => {
       const r = 3 + Math.pow(rand(i, 61), 0.8) * 32
       set(i, r, rand(i, 62) * Math.PI * 2, speedAt(r) * 0.6, 0.14, 0, gauss(i, 63) * 0.3, 0, hazeCol)
@@ -190,9 +190,9 @@ export function buildFormations(N: number): Formations {
   /* ------------------------------------------------------------ kathmandu */
   {
     const GROUND = -14
-    const stone = hex('#7f76c8'), stoneDim = hex('#b4acdc'), gold = hex('#e29a2c'), light = hex('#ea7a4c'), lightPale = hex('#f2b06c'), led = hex('#7fa8e8')
-    const snow = hex('#f08c94'), rock = hex('#a79cd8'), sky = hex('#b6abea')
-    const flagCols = ['#4f90e4', '#c8c0d8', '#e85c5c', '#3fae7e', '#ecb82e'].map(hex)
+    const stone = hex('#6f82a8'), stoneDim = hex('#b6c0d2'), gold = hex('#e29a2c'), light = hex('#ea7a4c'), lightPale = hex('#f2b06c'), led = hex('#7fa8e8')
+    const snow = hex('#f08c94'), rock = hex('#a4b2c8'), sky = hex('#a9c4e8')
+    const flagCols = ['#4f90e4', '#d8d0c2', '#e85c5c', '#3fae7e', '#ecb82e'].map(hex)
     const set = (i: number, x: number, y: number, z: number, a: number, c: [number, number, number]) => {
       kath[i * 4] = x; kath[i * 4 + 1] = y; kath[i * 4 + 2] = z; kath[i * 4 + 3] = a
       kathC[i * 3] = c[0]; kathC[i * 3 + 1] = c[1]; kathC[i * 3 + 2] = c[2]
